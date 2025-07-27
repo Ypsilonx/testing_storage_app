@@ -13,6 +13,7 @@ class RegalyTab {
         this.shelves = [];
         this.positions = [];
         this.gitterboxes = [];
+        this.recentGb = []; // Naposledy zobrazené GB
         
         this.initializeElements();
         this.attachEventListeners();
@@ -23,11 +24,11 @@ class RegalyTab {
      * Inicializace DOM elementů
      */
     initializeElements() {
-        this.locationSelector = document.getElementById('location-selector');
+        // Odstraněno locationSelector - používáme jen shelfSelector
         this.shelfSelector = document.getElementById('shelf-selector');
         this.shelfGrid = document.getElementById('shelf-grid');
         this.criticalList = document.getElementById('critical-list');
-        this.gbByLocation = document.getElementById('gb-by-location');
+        this.recentGbList = document.getElementById('recent-gb'); // Změněno z gb-by-location
         this.newGbBtn = document.getElementById('btn-new-gb');
         this.quickSearchBtn = document.getElementById('btn-quick-search');
     }
@@ -36,11 +37,7 @@ class RegalyTab {
      * Připojení event listenerů
      */
     attachEventListeners() {
-        // Selectory
-        this.locationSelector.addEventListener('change', (e) => {
-            this.onLocationChange(e.target.value);
-        });
-
+        // Pouze shelf selector
         this.shelfSelector.addEventListener('change', (e) => {
             this.onShelfChange(e.target.value);
         });
@@ -69,6 +66,11 @@ class RegalyTab {
                 this.loadStatistics()
             ]);
             
+            // Po načtení všech dat zobrazit přehled a aktualizovat statistiky
+            this.populateShelfSelector();
+            this.renderAllShelves();
+            this.updateStatistics(); // Automatická aktualizace statistik
+            
         } catch (error) {
             showError('Chyba při načítání dat: ' + error.message);
         } finally {
@@ -83,9 +85,7 @@ class RegalyTab {
         try {
             const response = await API.getLocations();
             this.locations = response.data;
-            this.populateLocationSelector();
-            this.populateShelfSelector(); // Přidáno pro dropdown regálů
-            this.renderAllShelves(); // Zobrazit přehled všech regálů na začátku
+            // Populace shelf selectoru a renderování se dělá v loadInitialData
         } catch (error) {
             console.error('Chyba při načítání lokací:', error);
             throw error;
@@ -99,7 +99,7 @@ class RegalyTab {
         try {
             const response = await API.getAllGitterboxes();
             this.gitterboxes = response.data || [];
-            this.updateGbByLocation();
+            this.updateRecentGb(); // Změněno z updateGbByLocation
             this.updateCriticalList();
         } catch (error) {
             console.error('Chyba při načítání Gitterboxů:', error);
@@ -118,35 +118,6 @@ class RegalyTab {
             console.error('Chyba při načítání statistik:', error);
             // Statistiky nejsou kritické, takže chybu jen logujeme
         }
-    }
-
-    /**
-     * Naplnění selectoru lokací
-     */
-    populateLocationSelector() {
-        this.locationSelector.innerHTML = '<option value="">Vyberte lokaci...</option>';
-        
-        this.locations.forEach(location => {
-            const option = document.createElement('option');
-            option.value = location.id;
-            option.textContent = location.nazev;
-            this.locationSelector.appendChild(option);
-        });
-    }
-
-    /**
-     * Handler pro změnu lokace
-     */
-    async onLocationChange(locationId) {
-        if (!locationId) {
-            this.clearShelfSelector();
-            this.clearShelfGrid();
-            return;
-        }
-
-        this.currentLocation = this.locations.find(loc => loc.id == locationId);
-        this.populateShelfSelector();
-        this.clearShelfGrid();
     }
 
     /**
@@ -350,66 +321,99 @@ class RegalyTab {
     }
 
     /**
-     * Aktualizace seznamu GB podle lokace
+     * Aktualizace seznamu naposledy zobrazených GB
      */
-    updateGbByLocation() {
-        if (this.gitterboxes.length === 0) {
-            this.gbByLocation.innerHTML = `
+    updateRecentGb() {
+        if (!this.recentGbList) return;
+        
+        if (this.recentGb.length === 0) {
+            this.recentGbList.innerHTML = `
                 <div class="text-gray-500 text-sm italic">
-                    Žádné aktivní Gitterboxy
+                    Zatím žádné zobrazené GB
                 </div>
             `;
             return;
         }
 
-        // Seskupení podle lokace
-        const gbByLoc = {};
-        this.gitterboxes.forEach(gb => {
-            const lokace = gb.lokace;
-            if (!gbByLoc[lokace]) {
-                gbByLoc[lokace] = [];
-            }
-            gbByLoc[lokace].push(gb);
-        });
-
-        // Vykreslení
-        this.gbByLocation.innerHTML = Object.keys(gbByLoc).map(lokace => `
-            <div class="mb-3">
-                <h4 class="font-medium text-gray-900 mb-2">
-                    <i class="fas fa-map-marker-alt mr-1"></i>
-                    ${lokace} (${gbByLoc[lokace].length})
-                </h4>
-                <div class="space-y-1">
-                    ${gbByLoc[lokace].slice(0, 5).map(gb => `
-                        <div class="flex items-center justify-between text-sm p-2 bg-gray-50 rounded cursor-pointer hover:bg-gray-100" 
-                             onclick="regalyTab.showGbDetail(${gb.cislo_gb})">
-                            <span>GB #${gb.cislo_gb}</span>
-                            <span class="text-xs text-gray-500">${gb.regal}</span>
-                        </div>
-                    `).join('')}
-                    ${gbByLoc[lokace].length > 5 ? `
-                        <div class="text-xs text-gray-500 text-center">
-                            ... a dalších ${gbByLoc[lokace].length - 5}
-                        </div>
-                    ` : ''}
+        // Zobrazit posledních 5 GB
+        this.recentGbList.innerHTML = this.recentGb.slice(0, 5).map(gb => `
+            <div class="flex items-center justify-between text-sm p-2 bg-gray-50 rounded cursor-pointer hover:bg-gray-100" 
+                 onclick="regalyTab.showGbDetail(${gb.cislo_gb})">
+                <div>
+                    <span class="font-medium">GB #${gb.cislo_gb}</span>
+                    <div class="text-xs text-gray-500">${escapeHtml(gb.zodpovedna_osoba)}</div>
+                </div>
+                <div class="text-xs text-gray-400">
+                    ${gb.lokace} → ${gb.regal}
                 </div>
             </div>
         `).join('');
     }
 
     /**
+     * Přidání GB do recent historie
+     */
+    addToRecentGb(gb) {
+        // Odstraň duplicity
+        this.recentGb = this.recentGb.filter(recent => recent.id !== gb.id);
+        // Přidej na začátek
+        this.recentGb.unshift(gb);
+        // Omez na 10 posledních
+        this.recentGb = this.recentGb.slice(0, 10);
+        // Aktualizuj UI
+        this.updateRecentGb();
+    }
+
+    /**
      * Aktualizace statistik v headeru
      */
-    updateStatistics(stats) {
+    updateStatistics() {
         const totalGbEl = document.getElementById('stats-total-gb');
         const criticalEl = document.getElementById('stats-critical');
         const utilizationEl = document.getElementById('stats-utilization');
 
-        if (totalGbEl) totalGbEl.textContent = this.gitterboxes.length;
-        if (criticalEl) criticalEl.textContent = this.gitterboxes.filter(gb => gb.ma_kriticke_expirace).length;
-        if (utilizationEl && stats.celkem_pozic) {
-            const utilization = Math.round((this.gitterboxes.length / stats.celkem_pozic) * 100);
+        // Spočítej celkový počet pozic
+        let totalPositions = 0;
+        this.locations.forEach(location => {
+            if (location.regaly) {
+                location.regaly.forEach(shelf => {
+                    totalPositions += shelf.radky * shelf.sloupce;
+                });
+            }
+        });
+
+        // Aktualizuj elementy
+        if (totalGbEl) {
+            totalGbEl.textContent = `${this.gitterboxes.length}/${totalPositions}`;
+        }
+        
+        if (criticalEl) {
+            const criticalCount = this.gitterboxes.filter(gb => gb.ma_kriticke_expirace).length;
+            criticalEl.textContent = criticalCount;
+        }
+        
+        if (utilizationEl && totalPositions > 0) {
+            const utilization = Math.round((this.gitterboxes.length / totalPositions) * 100);
             utilizationEl.textContent = `${utilization}%`;
+        }
+    }
+
+    /**
+     * Zobrazení detailu pozice/GB
+     */
+    showPositionDetail(poziceId, gbId) {
+        if (gbId) {
+            // Zobrazit detail GB a přidat do recent
+            const gb = this.gitterboxes.find(g => g.id === gbId);
+            if (gb) {
+                this.addToRecentGb(gb);
+                this.showGbDetail(gb.cislo_gb);
+            }
+        } else {
+            // Zobrazit možnost vytvoření nového GB na této pozici
+            if (poziceId) {
+                this.showNewGbModal(poziceId);
+            }
         }
     }
 
@@ -520,38 +524,46 @@ ${items.map(item => `- ${item.nazev_dilu} (${item.popis_mnozstvi})`).join('\n')}
     }
 
     /**
-     * Vykreslení všech regálů v přehledu
+     * Vykreslení všech regálů v přehledu - pod sebou s pozicemi
      */
-    renderAllShelves() {
+    async renderAllShelves() {
         if (!this.shelfGrid) return;
         
+        // Načti pozice pro všechny regály
+        let allPositions = [];
+        for (const location of this.locations) {
+            if (location.regaly) {
+                for (const shelf of location.regaly) {
+                    try {
+                        const response = await API.getShelfPositions(shelf.id);
+                        allPositions.push({
+                            shelf: shelf,
+                            location: location,
+                            positions: response.data.pozice || []
+                        });
+                    } catch (error) {
+                        console.warn(`Chyba při načítání pozic pro regál ${shelf.nazev}:`, error);
+                    }
+                }
+            }
+        }
+        
         this.shelfGrid.innerHTML = `
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                ${this.locations.map(location => `
-                    <div class="location-container">
-                        <h4 class="text-lg font-semibold text-gray-200 mb-4 flex items-center">
-                            <i class="fas fa-map-marker-alt text-blue-400 mr-2"></i>
-                            ${escapeHtml(location.nazev)}
-                        </h4>
-                        <div class="space-y-4">
-                            ${location.regaly ? location.regaly.map(shelf => `
-                                <div class="shelf-overview bg-gray-800 rounded-lg p-4 border border-gray-600">
-                                    <div class="flex justify-between items-center mb-3">
-                                        <h5 class="font-medium text-gray-200">${escapeHtml(shelf.nazev)}</h5>
-                                        <span class="text-sm text-gray-400">${shelf.radky}×${shelf.sloupce} pozic</span>
-                                    </div>
-                                    <div class="grid gap-1" style="grid-template-columns: repeat(${shelf.sloupce}, minmax(0, 1fr));">
-                                        ${this.generateShelfPreview(shelf)}
-                                    </div>
-                                    <button 
-                                        class="mt-3 w-full bg-blue-600 hover:bg-blue-700 text-white text-sm py-2 px-3 rounded transition-colors"
-                                        onclick="regalyTab.selectShelf(${shelf.id})"
-                                    >
-                                        <i class="fas fa-eye mr-1"></i>
-                                        Zobrazit detail
-                                    </button>
-                                </div>
-                            `).join('') : '<div class="text-gray-500 text-sm">Žádné regály</div>'}
+            <div class="space-y-8">
+                ${allPositions.map(item => `
+                    <div class="shelf-container bg-gray-700 rounded-lg p-6 border border-gray-500">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="text-xl font-semibold text-gray-100 flex items-center">
+                                <i class="fas fa-map-marker-alt text-blue-400 mr-2"></i>
+                                ${escapeHtml(item.location.nazev)} → ${escapeHtml(item.shelf.nazev)}
+                            </h4>
+                            <span class="text-sm text-gray-300 bg-gray-600 px-3 py-1 rounded">
+                                ${item.shelf.radky}×${item.shelf.sloupce} pozic
+                            </span>
+                        </div>
+                        <div class="grid gap-2 p-4 bg-gray-800 rounded" 
+                             style="grid-template-columns: repeat(${item.shelf.sloupce}, minmax(0, 1fr));">
+                            ${this.generateShelfGrid(item.shelf, item.positions)}
                         </div>
                     </div>
                 `).join('')}
@@ -560,30 +572,38 @@ ${items.map(item => `- ${item.nazev_dilu} (${item.popis_mnozstvi})`).join('\n')}
     }
 
     /**
-     * Generování náhledu regálu (mini mřížka)
+     * Generování mřížky regálu s pozicemi
      */
-    generateShelfPreview(shelf) {
-        const totalPositions = shelf.radky * shelf.sloupce;
-        let preview = '';
+    generateShelfGrid(shelf, positions) {
+        let grid = '';
         
         for (let r = 1; r <= shelf.radky; r++) {
             for (let c = 1; c <= shelf.sloupce; c++) {
+                // Najdi pozici na této souřadnici
+                const position = positions.find(pos => pos.radek === r && pos.sloupec === c);
                 // Najdi GB na této pozici
                 const gb = this.gitterboxes.find(gb => 
                     gb.regal === shelf.nazev && gb.radek === r && gb.sloupec === c
                 );
                 
-                const cellClass = gb ? 'gb-aktivni' : 'gb-volna';
-                preview += `
-                    <div class="position-cell-mini ${cellClass} text-xs" 
-                         title="${gb ? `GB #${gb.cislo_gb}` : 'Volná pozice'}">
-                        ${gb ? gb.cislo_gb : '•'}
+                const cellClass = gb ? 'gb-pozice-aktivni' : 'gb-pozice-volna';
+                const gbInfo = gb ? `GB #${gb.cislo_gb}` : 'Volná';
+                const tooltip = gb ? 
+                    `GB #${gb.cislo_gb}\\n${gb.zodpovedna_osoba}\\n${gb.naplnenost_procenta}% naplněno` : 
+                    `Pozice ${r}-${c}\\nVolná pozice`;
+                
+                grid += `
+                    <div class="position-cell ${cellClass}" 
+                         title="${tooltip}"
+                         onclick="regalyTab.showPositionDetail(${position?.id || 'null'}, ${gb?.id || 'null'})">
+                        <div class="text-xs font-bold">${gb ? gb.cislo_gb : '•'}</div>
+                        <div class="text-xs text-gray-400">${r}-${c}</div>
                     </div>
                 `;
             }
         }
         
-        return preview;
+        return grid;
     }
 
     /**

@@ -5,6 +5,18 @@
     font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
 }
 
+/* FontAwesome ikony - zachovat původní font */
+.fas, .far, .fab, .fal, .fad, .fa {
+    font-family: "Font Awesome 6 Free", "Font Awesome 6 Pro", "FontAwesome" !important;
+    font-weight: 900 !important;
+}
+
+/* Ikony v tlačítkách a nadpisech */
+i.fas, i.far, i.fab, i.fal, i.fad, i.fa {
+    font-family: "Font Awesome 6 Free", "Font Awesome 6 Pro", "FontAwesome" !important;
+    font-weight: 900 !important;
+}
+
 body {
     background-color: #1a1a1a !important;
     color: #e0e0e0 !important;
@@ -89,7 +101,7 @@ body {
     color: #fdba74 !important;
 }
 
-/* Position grid styling - tmavý režim */
+/* Position grid styling - tmavý režim se světlejšími barvami */
 .position-grid {
     display: grid;
     gap: 2px;
@@ -104,6 +116,7 @@ body {
     border: 2px solid #4b5563 !important;
     border-radius: 4px;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     font-size: 11px;
@@ -119,6 +132,31 @@ body {
 .position-cell:hover {
     transform: scale(1.05);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Nové světlejší barvy pro pozice */
+.gb-pozice-volna {
+    background-color: #065f46 !important; /* Tmavě zelená */
+    border-color: #10b981 !important; /* Světlejší zelená */
+    color: #6ee7b7 !important; /* Velmi světlá zelená */
+}
+
+.gb-pozice-aktivni {
+    background-color: #1e40af !important; /* Tmavě modrá */
+    border-color: #3b82f6 !important; /* Světlejší modrá */
+    color: #93c5fd !important; /* Velmi světlá modrá */
+}
+
+.gb-pozice-kriticka {
+    background-color: #991b1b !important; /* Tmavě červená */
+    border-color: #ef4444 !important; /* Světlejší červená */
+    color: #fca5a5 !important; /* Velmi světlá červená */
+}
+
+.gb-pozice-plny {
+    background-color: #92400e !important; /* Tmavě oranžová */
+    border-color: #f59e0b !important; /* Světlejší oranžová */
+    color: #fcd34d !important; /* Velmi světlá oranžová */
 }
 
 /* Tooltip pro pozice - tmavý režim */
