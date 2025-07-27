@@ -8,6 +8,7 @@ class RegalyTab {
     constructor() {
         this.currentLocation = null;
         this.currentShelf = null;
+        this.selectedShelfId = 'all'; // Pro dropdown - 'all' nebo konkrétní shelf ID
         this.locations = [];
         this.shelves = [];
         this.positions = [];
@@ -83,6 +84,8 @@ class RegalyTab {
             const response = await API.getLocations();
             this.locations = response.data;
             this.populateLocationSelector();
+            this.populateShelfSelector(); // Přidáno pro dropdown regálů
+            this.renderAllShelves(); // Zobrazit přehled všech regálů na začátku
         } catch (error) {
             console.error('Chyba při načítání lokací:', error);
             throw error;
@@ -150,25 +153,36 @@ class RegalyTab {
      * Naplnění selectoru regálů
      */
     populateShelfSelector() {
-        this.shelfSelector.innerHTML = '<option value="">Vyberte regál...</option>';
+        this.shelfSelector.innerHTML = '<option value="all">🔍 Všechny regály</option>';
         this.shelfSelector.disabled = false;
         
-        if (this.currentLocation && this.currentLocation.regaly) {
-            this.currentLocation.regaly.forEach(shelf => {
-                const option = document.createElement('option');
-                option.value = shelf.id;
-                option.textContent = `${shelf.nazev} (${shelf.rozmer})`;
-                this.shelfSelector.appendChild(option);
-            });
-        }
+        // Přidej všechny regály ze všech lokací
+        this.locations.forEach(location => {
+            if (location.regaly && location.regaly.length > 0) {
+                // Group header pro lokaci
+                const optgroup = document.createElement('optgroup');
+                optgroup.label = `📍 ${location.nazev}`;
+                
+                location.regaly.forEach(shelf => {
+                    const option = document.createElement('option');
+                    option.value = shelf.id;
+                    option.textContent = `${shelf.nazev} (${shelf.radky}×${shelf.sloupce})`;
+                    optgroup.appendChild(option);
+                });
+                
+                this.shelfSelector.appendChild(optgroup);
+            }
+        });
     }
 
     /**
      * Handler pro změnu regálu
      */
     async onShelfChange(shelfId) {
-        if (!shelfId) {
-            this.clearShelfGrid();
+        this.selectedShelfId = shelfId;
+        
+        if (!shelfId || shelfId === 'all') {
+            this.renderAllShelves();
             return;
         }
 
@@ -506,15 +520,92 @@ ${items.map(item => `- ${item.nazev_dilu} (${item.popis_mnozstvi})`).join('\n')}
     }
 
     /**
+     * Vykreslení všech regálů v přehledu
+     */
+    renderAllShelves() {
+        if (!this.shelfGrid) return;
+        
+        this.shelfGrid.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                ${this.locations.map(location => `
+                    <div class="location-container">
+                        <h4 class="text-lg font-semibold text-gray-200 mb-4 flex items-center">
+                            <i class="fas fa-map-marker-alt text-blue-400 mr-2"></i>
+                            ${escapeHtml(location.nazev)}
+                        </h4>
+                        <div class="space-y-4">
+                            ${location.regaly ? location.regaly.map(shelf => `
+                                <div class="shelf-overview bg-gray-800 rounded-lg p-4 border border-gray-600">
+                                    <div class="flex justify-between items-center mb-3">
+                                        <h5 class="font-medium text-gray-200">${escapeHtml(shelf.nazev)}</h5>
+                                        <span class="text-sm text-gray-400">${shelf.radky}×${shelf.sloupce} pozic</span>
+                                    </div>
+                                    <div class="grid gap-1" style="grid-template-columns: repeat(${shelf.sloupce}, minmax(0, 1fr));">
+                                        ${this.generateShelfPreview(shelf)}
+                                    </div>
+                                    <button 
+                                        class="mt-3 w-full bg-blue-600 hover:bg-blue-700 text-white text-sm py-2 px-3 rounded transition-colors"
+                                        onclick="regalyTab.selectShelf(${shelf.id})"
+                                    >
+                                        <i class="fas fa-eye mr-1"></i>
+                                        Zobrazit detail
+                                    </button>
+                                </div>
+                            `).join('') : '<div class="text-gray-500 text-sm">Žádné regály</div>'}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    /**
+     * Generování náhledu regálu (mini mřížka)
+     */
+    generateShelfPreview(shelf) {
+        const totalPositions = shelf.radky * shelf.sloupce;
+        let preview = '';
+        
+        for (let r = 1; r <= shelf.radky; r++) {
+            for (let c = 1; c <= shelf.sloupce; c++) {
+                // Najdi GB na této pozici
+                const gb = this.gitterboxes.find(gb => 
+                    gb.regal === shelf.nazev && gb.radek === r && gb.sloupec === c
+                );
+                
+                const cellClass = gb ? 'gb-aktivni' : 'gb-volna';
+                preview += `
+                    <div class="position-cell-mini ${cellClass} text-xs" 
+                         title="${gb ? `GB #${gb.cislo_gb}` : 'Volná pozice'}">
+                        ${gb ? gb.cislo_gb : '•'}
+                    </div>
+                `;
+            }
+        }
+        
+        return preview;
+    }
+
+    /**
+     * Výběr konkrétního regálu z přehledu
+     */
+    selectShelf(shelfId) {
+        this.shelfSelector.value = shelfId;
+        this.onShelfChange(shelfId);
+    }
+
+    /**
      * Refresh všech dat
      */
     async refresh() {
         await this.loadInitialData();
         
         // Pokud máme vybraný regál, obnovíme i pozice
-        if (this.shelfSelector.value) {
+        if (this.shelfSelector.value && this.shelfSelector.value !== 'all') {
             await this.loadShelfPositions(this.shelfSelector.value);
             this.renderShelfGrid();
+        } else {
+            this.renderAllShelves();
         }
     }
 }

@@ -79,7 +79,10 @@
 
 ### FÁZE 3: ZÁKLADNÍ FRONTEND (týden 3)
 - [x] 3.1 HTML struktura se dvěma záložkami ✅ (27.7.2025)
-- [ ] 3.2 CSS styling s Tailwind
+- [x] 3.2 CSS styling s Tailwind ✅ (27.7.2025)
+  - **BONUS**: Tmavý režim + Consolas font
+  - Dropdown výběr regálů s přehledem všech
+  - Jednotné velikosti tlačítek GB
 - [ ] 3.3 JavaScript pro interaktivitu
 - [ ] 3.4 Základní formuláře (nový GB, přidání položky)
 - [ ] 3.5 Propojení s API
