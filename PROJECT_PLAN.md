@@ -19,8 +19,9 @@
   - API testováno a funkční
 
 ### 🔄 AKTUÁLNĚ:
-- Připraveno k implementaci Phase 2.2 (validace a error handling)
-- Nebo Phase 2.3 (API pro správu položek v GB)
+- **Phase 3.1 KOMPLETNÍ** - HTML struktura s dvěma záložkami (Regály + Vyhledávání)
+- **Frontend běží** - http://localhost:8000 s plně funkčním rozhraním
+- Připraveno k implementaci Phase 3.2-3.5 (styling, interaktivita, formuláře)
 
 ---
 
@@ -70,7 +71,7 @@
 - [ ] 2.5 Testy backend funkcionalit
 
 ### FÁZE 3: ZÁKLADNÍ FRONTEND (týden 3)
-- [ ] 3.1 HTML struktura se dvěma záložkami
+- [x] 3.1 HTML struktura se dvěma záložkami ✅ (27.7.2025)
 - [ ] 3.2 CSS styling s Tailwind
 - [ ] 3.3 JavaScript pro interaktivitu
 - [ ] 3.4 Základní formuláře (nový GB, přidání položky)

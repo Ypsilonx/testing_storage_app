@@ -12,9 +12,9 @@ from sqlalchemy.orm import Session
 import os
 from pathlib import Path
 
-from .database import get_database, init_database, get_storage_statistics
-from .models import Location, Shelf, Position, Gitterbox, Item
-from .routers import gitterboxes
+from database import get_database, init_database, get_storage_statistics
+from models import Location, Shelf, Position, Gitterbox, Item
+from routers import gitterboxes
 
 # Vytvoření FastAPI aplikace
 app = FastAPI(
@@ -212,41 +212,6 @@ async def get_shelf_positions(shelf_id: int, db: Session = Depends(get_database)
         raise HTTPException(status_code=500, detail=f"Chyba při načítání pozic: {str(e)}")
 
 
-@app.get("/api/gitterboxes")
-async def get_gitterboxes(db: Session = Depends(get_database)):
-    """Seznam všech aktivních Gitterboxů"""
-    try:
-        gitterboxes = db.query(Gitterbox).filter(Gitterbox.stav == "aktivni").all()
-        
-        result = []
-        for gb in gitterboxes:
-            result.append({
-                "id": gb.id,
-                "cislo_gb": gb.cislo_gb,
-                "zodpovedna_osoba": gb.zodpovedna_osoba,
-                "datum_zalozeni": gb.datum_zalozeni.isoformat(),
-                "pocet_polozek": gb.pocet_polozek,
-                "naplnenost_procenta": gb.naplnenost_procenta,
-                "barva_indikace": gb.barva_indikace,
-                "ma_kriticke_expirace": gb.ma_kriticke_expirace,
-                "poznamka": gb.poznamka,
-                "pozice": {
-                    "nazev": gb.pozice.nazev_pozice,
-                    "regal": gb.pozice.regal.nazev,
-                    "lokace": gb.pozice.regal.lokace.nazev
-                }
-            })
-        
-        return {
-            "status": "success", 
-            "data": result,
-            "message": f"Načteno {len(result)} aktivních Gitterboxů"
-        }
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Chyba při načítání Gitterboxů: {str(e)}")
-
-
 @app.get("/api/gitterboxes/{gb_id}/items")
 async def get_gitterbox_items(gb_id: int, db: Session = Depends(get_database)):
     """Položky konkrétního Gitterboxu"""
@@ -302,7 +267,7 @@ async def get_gitterbox_items(gb_id: int, db: Session = Depends(get_database)):
 async def get_storage_config():
     """Aktuální konfigurace skladu"""
     try:
-        from .storage_config import get_storage_summary, ACTIVE_CONFIG
+        from storage_config import get_storage_summary, ACTIVE_CONFIG
         
         summary = get_storage_summary()
         return {

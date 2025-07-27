@@ -1,0 +1,215 @@
+/* Skladová aplikace - Custom CSS */
+
+/* Tab styling */
+.tab-active {
+    background-color: #2563eb;
+    color: white;
+    border-color: #2563eb;
+}
+
+.tab-inactive {
+    background-color: #f3f4f6;
+    color: #374151;
+    border-color: #d1d5db;
+}
+
+.tab-inactive:hover {
+    background-color: #e5e7eb;
+}
+
+/* Tab content transitions */
+.tab-content {
+    transition: opacity 0.3s ease-in-out;
+}
+
+/* Gitterbox stavové barvy */
+.gb-volna {
+    background-color: #dcfce7;
+    border-color: #86efac;
+}
+
+.gb-aktivni {
+    background-color: #dbeafe;
+    border-color: #93c5fd;
+}
+
+.gb-kriticka {
+    background-color: #fecaca;
+    border-color: #f87171;
+}
+
+.gb-plny {
+    background-color: #fed7aa;
+    border-color: #fdba74;
+}
+
+/* Position grid styling */
+.position-grid {
+    display: grid;
+    gap: 2px;
+    padding: 8px;
+    background-color: #f9fafb;
+    border-radius: 8px;
+}
+
+.position-cell {
+    aspect-ratio: 1;
+    border: 2px solid #d1d5db;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 40px;
+    position: relative;
+}
+
+.position-cell:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Tooltip pro pozice */
+.position-tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #1f2937;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease;
+    z-index: 10;
+}
+
+.position-cell:hover .position-tooltip {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Šrafování pro neúplně naplněné GB */
+.gb-pattern {
+    background-image: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.1) 2px,
+        rgba(0, 0, 0, 0.1) 4px
+    );
+}
+
+/* Search results table */
+.search-results-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.search-results-table th,
+.search-results-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.search-results-table th {
+    background-color: #f9fafb;
+    font-weight: 600;
+    color: #374151;
+}
+
+.search-results-table tr:hover {
+    background-color: #f9fafb;
+}
+
+/* Tree structure styling */
+.tree-node {
+    padding-left: 20px;
+    margin: 4px 0;
+}
+
+.tree-node.root {
+    padding-left: 0;
+}
+
+.tree-toggle {
+    cursor: pointer;
+    user-select: none;
+    font-weight: 500;
+}
+
+.tree-toggle:hover {
+    color: #2563eb;
+}
+
+.tree-children {
+    margin-left: 16px;
+    border-left: 1px solid #e5e7eb;
+    padding-left: 12px;
+}
+
+/* Loading states */
+.loading-shimmer {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .position-cell {
+        min-height: 30px;
+        font-size: 8px;
+    }
+    
+    .position-tooltip {
+        font-size: 10px;
+        padding: 6px 8px;
+    }
+}
+
+/* Custom scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Print styles */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    .print-break {
+        page-break-before: always;
+    }
+}

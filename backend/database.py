@@ -46,7 +46,7 @@ def create_tables():
     """
     Vytvoří všechny tabulky v databázi
     """
-    from .models import Base
+    from models import Base
     Base.metadata.create_all(bind=engine)
     
 
@@ -57,8 +57,8 @@ def init_database():
     create_tables()
     
     # Import zde kvůli circular imports
-    from .models import Location, Shelf, Position
-    from .storage_config import ACTIVE_CONFIG
+    from models import Location, Shelf, Position
+    from storage_config import ACTIVE_CONFIG
     
     db = SessionLocal()
     try:
@@ -128,7 +128,7 @@ def get_storage_statistics():
     """
     db = SessionLocal()
     try:
-        from .models import Location, Shelf, Position, Gitterbox
+        from models import Location, Shelf, Position, Gitterbox
         
         stats = {
             "lokace_celkem": db.query(Location).count(),

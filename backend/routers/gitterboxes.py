@@ -13,12 +13,16 @@ Funkce:
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from datetime import date
 
-from ..database import get_database
-from ..models import Gitterbox, Position, Shelf, Location, Item
-from ..storage_config import get_total_positions
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from database import get_database
+from models import Gitterbox, Position, Shelf, Location, Item
+from storage_config import get_total_positions
 
 router = APIRouter(prefix="/api/gitterboxes", tags=["gitterboxes"])
 
@@ -58,7 +62,7 @@ class GitterboxResponse(BaseModel):
     class Config:
         from_attributes = True
 
-@router.get("/", response_model=List[GitterboxResponse])
+@router.get("/", response_model=Dict[str, Any])
 def get_all_gitterboxes(
     stav: Optional[str] = None,
     zodpovedna_osoba: Optional[str] = None,
@@ -107,7 +111,11 @@ def get_all_gitterboxes(
             ma_kriticke_expirace=ma_kriticke
         ))
     
-    return result
+    return {
+        "status": "success",
+        "data": result,
+        "message": f"Načteno {len(result)} Gitterboxů"
+    }
 
 @router.get("/{gb_id}", response_model=GitterboxResponse)
 def get_gitterbox(gb_id: int, db: Session = Depends(get_database)):
