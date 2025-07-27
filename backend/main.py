@@ -14,7 +14,7 @@ from pathlib import Path
 
 from database import get_database, init_database, get_storage_statistics
 from models import Location, Shelf, Position, Gitterbox, Item
-from routers import gitterboxes
+from routers import gitterboxes, items, positions
 
 # Vytvoření FastAPI aplikace
 app = FastAPI(
@@ -43,6 +43,12 @@ if static_path.exists():
 
 # Přidání routeru pro Gitterboxy
 app.include_router(gitterboxes.router)
+
+# Přidání routeru pro položky
+app.include_router(items.router)
+
+# Přidání routeru pro pozice
+app.include_router(positions.router)
 
 
 @app.on_event("startup")

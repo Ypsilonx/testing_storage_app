@@ -405,27 +405,20 @@ class RegalyTab {
      * Zobrazení detailu Gitterboxu
      */
     async showGbDetail(cisloGb) {
-        // Pro teď jen alert, později modal
         try {
             showLoading();
             const gb = this.gitterboxes.find(g => g.cislo_gb == cisloGb);
-            if (gb) {
-                const itemsResponse = await API.getGitterboxItems(gb.id);
-                const items = itemsResponse.data.polozky;
-                
-                let message = `
-GB #${gb.cislo_gb}
-Zodpovědná osoba: ${gb.zodpovedna_osoba}
-Pozice: ${gb.lokace} > ${gb.regal} > ${gb.radek}-${gb.sloupec}
-Naplněnost: ${gb.naplnenost_procenta}%
-Položky: ${items.length}
-
-Položky:
-${items.map(item => `- ${item.nazev_dilu} (${item.popis_mnozstvi})`).join('\n')}
-                `;
-                
-                alert(message.trim());
+            if (!gb) {
+                showError('Gitterbox nebyl nalezen');
+                return;
             }
+
+            const itemsResponse = await API.getGitterboxItems(gb.id);
+            const items = itemsResponse.data.polozky;
+            
+            // Vytvoř detail modal
+            this.createGbDetailModal(gb, items);
+            
         } catch (error) {
             showError('Chyba při načítání detailu GB: ' + error.message);
         } finally {
@@ -434,19 +427,252 @@ ${items.map(item => `- ${item.nazev_dilu} (${item.popis_mnozstvi})`).join('\n')}
     }
 
     /**
+     * Vytvoření detailního modalu pro GB
+     */
+    createGbDetailModal(gb, items) {
+        // Odstranit existující modal pokud existuje
+        const existingModal = document.getElementById('gb-detail-modal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        const modal = document.createElement('div');
+        modal.id = 'gb-detail-modal';
+        modal.className = 'modal-overlay fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4';
+        
+        modal.innerHTML = `
+            <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-96 overflow-y-auto">
+                <div class="p-6">
+                    <!-- Header -->
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-bold text-gray-900">
+                            <i class="fas fa-cube text-blue-500 mr-2"></i>
+                            Detail GB #${gb.cislo_gb}
+                        </h2>
+                        <button id="gb-detail-close" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+
+                    <!-- GB Info -->
+                    <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-sm text-gray-600">Zodpovědná osoba</p>
+                                <p class="font-medium">${gb.zodpovedna_osoba}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-600">Pozice</p>
+                                <p class="font-medium">${gb.lokace} > ${gb.regal} > ${gb.radek}-${gb.sloupec}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-600">Naplněnost</p>
+                                <p class="font-medium">${gb.naplnenost_procenta}%</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-600">Datum založení</p>
+                                <p class="font-medium">${formatDate(gb.datum_zalozeni)}</p>
+                            </div>
+                        </div>
+                        ${gb.poznamka ? `
+                            <div class="mt-3">
+                                <p class="text-sm text-gray-600">Poznámka</p>
+                                <p class="font-medium">${gb.poznamka}</p>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <!-- Action buttons -->
+                    <div class="flex space-x-3 mb-6">
+                        <button id="edit-gb-btn" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg transition-colors">
+                            <i class="fas fa-edit mr-2"></i>
+                            Upravit GB
+                        </button>
+                        <button id="add-item-btn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+                            <i class="fas fa-plus mr-2"></i>
+                            Přidat položku
+                        </button>
+                        <button id="copy-gb-info-btn" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors">
+                            <i class="fas fa-copy mr-2"></i>
+                            Kopírovat info
+                        </button>
+                    </div>
+
+                    <!-- Items list -->
+                    <div>
+                        <h3 class="text-lg font-semibold mb-3">
+                            Položky (${items.length})
+                        </h3>
+                        ${items.length > 0 ? `
+                            <div class="space-y-2">
+                                ${items.map(item => `
+                                    <div class="bg-white border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition-colors">
+                                        <div class="flex justify-between items-start">
+                                            <div class="flex-1">
+                                                <h4 class="font-medium text-gray-900">${item.nazev_dilu}</h4>
+                                                <div class="text-sm text-gray-600 mt-1">
+                                                    ${item.tma_cislo ? `<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded mr-2">TMA: ${item.tma_cislo}</span>` : ''}
+                                                    ${item.projekt ? `<span class="bg-green-100 text-green-800 px-2 py-1 rounded mr-2">${item.projekt}</span>` : ''}
+                                                    <span class="font-medium">${item.popis_mnozstvi}</span>
+                                                </div>
+                                                ${item.sledovat_expiraci && item.expiracni_datum ? `
+                                                    <div class="text-xs mt-2 ${item.je_blizko_expirace ? 'text-red-600' : 'text-gray-500'}">
+                                                        <i class="fas fa-calendar mr-1"></i>
+                                                        Expirace: ${formatDate(item.expiracni_datum)}
+                                                        ${item.dny_do_expirace !== null ? ` (${item.dny_do_expirace} dní)` : ''}
+                                                    </div>
+                                                ` : ''}
+                                            </div>
+                                            <button class="edit-item-btn text-gray-400 hover:text-orange-600 ml-2" data-item-id="${item.id}">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : `
+                            <div class="text-center py-8 text-gray-500">
+                                <i class="fas fa-box-open text-4xl mb-3 text-gray-300"></i>
+                                <p>Zatím žádné položky</p>
+                                <button id="add-first-item-btn" class="mt-3 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                    <i class="fas fa-plus mr-2"></i>
+                                    Přidat první položku
+                                </button>
+                            </div>
+                        `}
+                    </div>
+
+                    <!-- Close button -->
+                    <div class="mt-6 text-center">
+                        <button id="gb-detail-close-btn" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-6 py-2 rounded-lg transition-colors">
+                            <i class="fas fa-times mr-2"></i>
+                            Zavřít
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Event listeners
+        const closeModal = () => {
+            modal.remove();
+        };
+
+        document.getElementById('gb-detail-close').addEventListener('click', closeModal);
+        document.getElementById('gb-detail-close-btn').addEventListener('click', closeModal);
+        
+        // Click na overlay pro zavření
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        // Edit GB button
+        document.getElementById('edit-gb-btn').addEventListener('click', () => {
+            closeModal();
+            this.showEditGbModal(gb);
+        });
+
+        // Add item buttons
+        const addItemBtn = document.getElementById('add-item-btn');
+        const addFirstItemBtn = document.getElementById('add-first-item-btn');
+        
+        if (addItemBtn) {
+            addItemBtn.addEventListener('click', () => {
+                closeModal();
+                this.showAddItemModal(gb.id, gb.cislo_gb);
+            });
+        }
+        
+        if (addFirstItemBtn) {
+            addFirstItemBtn.addEventListener('click', () => {
+                closeModal();
+                this.showAddItemModal(gb.id, gb.cislo_gb);
+            });
+        }
+
+        // Edit item buttons
+        document.querySelectorAll('.edit-item-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const itemId = parseInt(e.currentTarget.dataset.itemId);
+                const item = items.find(i => i.id === itemId);
+                if (item) {
+                    closeModal();
+                    this.showEditItemModal(item);
+                }
+            });
+        });
+
+        // Copy GB info button
+        document.getElementById('copy-gb-info-btn').addEventListener('click', () => {
+            const info = `GB #${gb.cislo_gb} - ${gb.zodpovedna_osoba} - ${gb.lokace} > ${gb.regal} > ${gb.radek}-${gb.sloupec} - ${gb.naplnenost_procenta}%`;
+            copyToClipboard(info);
+        });
+
+        // ESC key pro zavření
+        const escHandler = (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+                document.removeEventListener('keydown', escHandler);
+            }
+        };
+        document.addEventListener('keydown', escHandler);
+    }
+
+    /**
      * Zobrazení modalu pro nový GB
      */
     showNewGbModal(poziceId = null) {
-        // Pro teď jednoduchý prompt, později modal
-        const osoba = prompt('Zadejte zodpovědnou osobu:');
-        if (!osoba) return;
+        if (window.gitterboxModal) {
+            window.gitterboxModal.openCreate();
+        } else {
+            // Fallback pro případ, že modal není inicializovaný
+            const osoba = prompt('Zadejte zodpovědnou osobu:');
+            if (!osoba) return;
 
-        const poznamka = prompt('Poznámka (volitelné):') || '';
+            const poznamka = prompt('Poznámka (volitelné):') || '';
 
-        this.createNewGb({ 
-            zodpovedna_osoba: osoba, 
-            poznamka: poznamka 
-        });
+            this.createNewGb({ 
+                zodpovedna_osoba: osoba, 
+                poznamka: poznamka 
+            });
+        }
+    }
+
+    /**
+     * Zobrazení modalu pro úpravu GB
+     */
+    showEditGbModal(gb) {
+        if (window.gitterboxModal) {
+            window.gitterboxModal.openEdit(gb);
+        } else {
+            showError('Modal systém není dostupný');
+        }
+    }
+
+    /**
+     * Zobrazení modalu pro přidání položky
+     */
+    showAddItemModal(gitterboxId, gbNumber) {
+        if (window.itemModal) {
+            window.itemModal.openCreate(gitterboxId, gbNumber);
+        } else {
+            showError('Modal systém není dostupný');
+        }
+    }
+
+    /**
+     * Zobrazení modalu pro úpravu položky
+     */
+    showEditItemModal(item) {
+        if (window.itemModal) {
+            window.itemModal.openEdit(item);
+        } else {
+            showError('Modal systém není dostupný');
+        }
     }
 
     /**

@@ -165,6 +165,52 @@ const API = {
         return ApiClient.get(`/gitterboxes/${gbId}/items`);
     },
 
+    // === POLOŽKY ===
+    
+    /**
+     * Vytvoření nové položky
+     */
+    async createItem(itemData) {
+        return ApiClient.post('/items/', itemData);
+    },
+
+    /**
+     * Aktualizace položky
+     */
+    async updateItem(itemId, itemData) {
+        return ApiClient.put(`/items/${itemId}`, itemData);
+    },
+
+    /**
+     * Smazání položky
+     */
+    async deleteItem(itemId) {
+        return ApiClient.delete(`/items/${itemId}`);
+    },
+
+    /**
+     * Získání konkrétní položky
+     */
+    async getItem(itemId) {
+        return ApiClient.get(`/items/${itemId}`);
+    },
+
+    // === POZICE ===
+
+    /**
+     * Získání všech dostupných (volných) pozic
+     */
+    async getAvailablePositions() {
+        return ApiClient.get('/positions/available');
+    },
+
+    /**
+     * Získání všech pozic
+     */
+    async getAllPositions() {
+        return ApiClient.get('/positions/');
+    },
+
     // === VYHLEDÁVÁNÍ ===
     
     /**

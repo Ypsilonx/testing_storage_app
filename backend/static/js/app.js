@@ -18,6 +18,7 @@ class SkladovaApp {
     async initializeApp() {
         try {
             this.initializeElements();
+            this.initializeModals();
             this.attachEventListeners();
             await this.performHealthCheck();
             this.isInitialized = true;
@@ -26,6 +27,24 @@ class SkladovaApp {
         } catch (error) {
             console.error('Chyba při inicializaci aplikace:', error);
             showError('Chyba při spuštění aplikace: ' + error.message);
+        }
+    }
+
+    /**
+     * Inicializace modal systému
+     */
+    initializeModals() {
+        // Modal manager je již globálně dostupný z modals.js
+        if (window.modalManager) {
+            // Inicializace Gitterbox modalu
+            this.gitterboxModal = new GitterboxModal(window.modalManager, API);
+            
+            // Inicializace Item modalu
+            this.itemModal = new ItemModal(window.modalManager, API);
+            
+            // Globální přístup pro debug
+            window.gitterboxModal = this.gitterboxModal;
+            window.itemModal = this.itemModal;
         }
     }
 
@@ -57,6 +76,16 @@ class SkladovaApp {
         if (this.refreshBtn) {
             this.refreshBtn.addEventListener('click', () => {
                 this.refreshActiveTab();
+            });
+        }
+
+        // Nový Gitterbox button
+        const newGbBtn = document.getElementById('btn-new-gb');
+        if (newGbBtn) {
+            newGbBtn.addEventListener('click', () => {
+                if (this.gitterboxModal) {
+                    this.gitterboxModal.openCreate();
+                }
             });
         }
 
