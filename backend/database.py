@@ -13,8 +13,21 @@ from dotenv import load_dotenv
 # Načtení environment proměnných
 load_dotenv()
 
-# Databázová URL - cesta k hlavní databázi v kořenovém adresáři
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///../storage.db")
+# Databázová URL - absolutní cesta k hlavní databázi v kořenovém adresáři
+# Najde kořenový adresář projektu (tam kde je tento backend folder)
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+db_path = os.path.join(project_root, "storage.db")
+
+# Pro Windows používáme absolutní cestu - DŮLEŽITÉ: musí být formát správný
+if os.name == 'nt':  # Windows
+    # Převést na absolutní cestu s forward slashes
+    db_path = os.path.abspath(db_path).replace("\\", "/")
+    DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{db_path}")
+else:  # Unix/Linux
+    DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{os.path.abspath(db_path)}")
+
+print(f"🗄️ Databázová cesta: {db_path}")
+print(f"🔗 DATABASE_URL: {DATABASE_URL}")
 
 # SQLAlchemy engine
 engine = create_engine(

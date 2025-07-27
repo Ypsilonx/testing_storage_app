@@ -121,6 +121,13 @@ const API = {
         return ApiClient.get(`/shelves/${shelfId}/positions`);
     },
 
+    /**
+     * Získání detailu konkrétní pozice
+     */
+    async getPosition(positionId) {
+        return ApiClient.get(`/positions/${positionId}`);
+    },
+
     // === GITTERBOXY ===
     
     /**
@@ -128,6 +135,13 @@ const API = {
      */
     async getAllGitterboxes() {
         return ApiClient.get('/gitterboxes/');
+    },
+
+    /**
+     * Získání dostupných čísel GB
+     */
+    async getAvailableGBNumbers() {
+        return ApiClient.get('/gitterboxes/available-numbers');
     },
 
     /**
@@ -202,13 +216,6 @@ const API = {
      */
     async getAvailablePositions() {
         return ApiClient.get('/positions/available');
-    },
-
-    /**
-     * Získání všech pozic
-     */
-    async getAllPositions() {
-        return ApiClient.get('/positions/');
     },
 
     // === VYHLEDÁVÁNÍ ===

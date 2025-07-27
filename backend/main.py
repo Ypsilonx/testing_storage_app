@@ -12,9 +12,9 @@ from sqlalchemy.orm import Session
 import os
 from pathlib import Path
 
-from .database import get_database, init_database, get_storage_statistics
-from .models import Location, Shelf, Position, Gitterbox, Item
-from .routers import gitterboxes, items, positions
+from database import get_database, init_database, get_storage_statistics
+from models import Location, Shelf, Position, Gitterbox, Item
+from routers import gitterboxes, items, positions
 
 # Vytvoření FastAPI aplikace
 app = FastAPI(
@@ -218,6 +218,42 @@ async def get_shelf_positions(shelf_id: int, db: Session = Depends(get_database)
         raise HTTPException(status_code=500, detail=f"Chyba při načítání pozic: {str(e)}")
 
 
+@app.get("/api/positions/{position_id}")
+async def get_position_detail(position_id: int, db: Session = Depends(get_database)):
+    """Detail konkrétní pozice"""
+    try:
+        position = db.query(Position).filter(Position.id == position_id).first()
+        if not position:
+            raise HTTPException(status_code=404, detail="Pozice nebyla nalezena")
+        
+        result = {
+            "id": position.id,
+            "radek": position.radek,
+            "sloupec": position.sloupec,
+            "nazev": position.nazev_pozice,
+            "status": position.status,
+            "shelf": {
+                "id": position.shelf.id,
+                "nazev": position.shelf.nazev,
+                "location": {
+                    "id": position.shelf.lokace.id,
+                    "nazev": position.shelf.lokace.nazev
+                }
+            }
+        }
+        
+        return {
+            "status": "success",
+            "data": result,
+            "message": f"Detail pozice {position.nazev_pozice}"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Chyba při načítání pozice: {str(e)}")
+
+
 @app.get("/api/gitterboxes/{gb_id}/items")
 async def get_gitterbox_items(gb_id: int, db: Session = Depends(get_database)):
     """Položky konkrétního Gitterboxu"""
@@ -267,6 +303,47 @@ async def get_gitterbox_items(gb_id: int, db: Session = Depends(get_database)):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Chyba při načítání položek: {str(e)}")
+
+
+@app.get("/api/gitterboxes/available-numbers")
+async def get_available_gb_numbers(db: Session = Depends(get_database)):
+    """Získání volných čísel Gitterboxů"""
+    try:
+        # Získej všechna používaná čísla GB
+        obsazena_cisla = db.query(Gitterbox.cislo_gb).filter(Gitterbox.stav == 'aktivni').all()
+        obsazena_cisla = [cislo[0] for cislo in obsazena_cisla]
+        
+        # Pokud nejsou žádná čísla, začni od 1
+        if not obsazena_cisla:
+            max_cislo = 1
+        else:
+            max_cislo = max(obsazena_cisla) + 10  # Rozšiř rozsah o 10
+        
+        # Vytvoř seznam všech čísel od 1 do max+10
+        vsechna_cisla = set(range(1, max_cislo + 1))
+        obsazena_cisla_set = set(obsazena_cisla)
+        
+        # Volná čísla
+        volna_cisla = list(vsechna_cisla - obsazena_cisla_set)
+        volna_cisla.sort()
+        
+        return {
+            "status": "success",
+            "data": {
+                "volna_cisla": volna_cisla,
+                "obsazena_cisla": sorted(obsazena_cisla),
+                "celkem_volnych": len(volna_cisla),
+                "celkem_obsazenych": len(obsazena_cisla),
+                "max_cislo": max_cislo
+            },
+            "message": f"Nalezeno {len(volna_cisla)} volných čísel"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Chyba při načítání čísel GB: {str(e)}")
+
+
+@app.get("/api/health")
 
 
 @app.get("/api/config/storage")

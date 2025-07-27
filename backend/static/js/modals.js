@@ -111,9 +111,9 @@ class ModalManager {
  * Gitterbox formulář modal
  */
 class GitterboxModal {
-    constructor(modalManager, apiClient) {
+    constructor(modalManager, apiClient = null) {
         this.modalManager = modalManager;
-        this.api = apiClient;
+        // ApiClient je statická třída, takže nepoužíváme instanci
         this.mode = 'create'; // 'create' nebo 'edit'
         this.editingGbId = null;
         this.availablePositions = [];
@@ -137,8 +137,8 @@ class GitterboxModal {
                             <i class="fas fa-cube text-blue-500 mr-2"></i>
                             Nový Gitterbox
                         </h2>
-                        <button id="gb-modal-close" class="text-gray-400 hover:text-gray-600">
-                            <i class="fas fa-times text-xl"></i>
+                        <button id="gb-modal-close" class="text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg p-1 transition-colors">
+                            <i class="fas fa-times text-2xl"></i>
                         </button>
                     </div>
                 </div>
@@ -152,28 +152,14 @@ class GitterboxModal {
                             <label for="gb-zodpovedna-osoba" class="block text-sm font-medium text-gray-700 mb-2">
                                 Zodpovědná osoba *
                             </label>
-                            <div class="relative">
-                                <input 
-                                    type="text" 
-                                    id="gb-zodpovedna-osoba" 
-                                    name="zodpovedna_osoba"
-                                    class="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    placeholder="Jan Novák nebo vyberte ze seznamu..."
-                                    required
-                                    list="employees-list"
-                                >
-                                <button type="button" id="show-employees-btn" class="absolute right-2 top-2 text-gray-400 hover:text-gray-600">
-                                    <i class="fas fa-chevron-down"></i>
-                                </button>
-                            </div>
-                            <datalist id="employees-list">
-                                <!-- TODO: Bude naplněno dynamicky ze seznamu zaměstnanců -->
-                                <option value="Jan Novák (jnovak)">Jan Novák (jnovak)</option>
-                                <option value="Marie Svoboda (msvoboda)">Marie Svoboda (msvoboda)</option>
-                                <option value="Petr Dvořák (pdvorak)">Petr Dvořák (pdvorak)</option>
-                                <option value="Anna Kratochvílová (akratochvilova)">Anna Kratochvílová (akratochvilova)</option>
-                                <option value="Tomáš Procházka (tprochazka)">Tomáš Procházka (tprochazka)</option>
-                            </datalist>
+                            <input 
+                                type="text" 
+                                id="gb-zodpovedna-osoba" 
+                                name="zodpovedna_osoba"
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="Jan Novák"
+                                required
+                            >
                         </div>
 
                         <!-- Číslo GB -->
@@ -181,22 +167,35 @@ class GitterboxModal {
                             <label for="gb-cislo" class="block text-sm font-medium text-gray-700 mb-2">
                                 Číslo Gitterboxu *
                             </label>
-                            <div class="relative">
-                                <select 
+                            <div class="space-y-3">
+                                <!-- Input pole pro číslo -->
+                                <input 
+                                    type="number" 
                                     id="gb-cislo" 
                                     name="cislo_gb"
                                     class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="Zadejte číslo GB (např. 1, 42, 100...)"
+                                    min="1"
                                     required
                                 >
-                                    <option value="">Vyberte číslo GB...</option>
-                                    <!-- Bude naplněno dynamicky -->
-                                </select>
-                                <button type="button" id="refresh-gb-numbers" class="absolute right-8 top-2 text-gray-400 hover:text-gray-600" title="Obnovit seznam">
-                                    <i class="fas fa-sync-alt"></i>
-                                </button>
-                            </div>
-                            <div class="text-xs text-gray-500 mt-1">
-                                Zobrazena jsou jen volná čísla GB (1-115)
+                                
+                                <!-- Horizontální pásek s volnými čísly -->
+                                <div class="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="text-sm font-medium text-gray-700">Volná čísla:</span>
+                                        <button type="button" id="refresh-gb-numbers" class="text-sm text-blue-600 hover:text-blue-800" title="Obnovit">
+                                            <i class="fas fa-sync-alt mr-1"></i>Obnovit
+                                        </button>
+                                    </div>
+                                    <div id="available-numbers-strip" class="overflow-x-auto max-h-20">
+                                        <div class="flex flex-wrap gap-1 min-w-max">
+                                            <!-- Bude naplněno dynamicky -->
+                                        </div>
+                                    </div>
+                                    <div id="gb-numbers-info" class="text-xs text-gray-500 mt-2">
+                                        Načítám dostupná čísla...
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -207,39 +206,48 @@ class GitterboxModal {
                             </label>
                             
                             <!-- Lokace -->
-                            <div class="mb-2">
+                            <div class="mb-2 relative">
                                 <select 
                                     id="gb-lokace" 
-                                    class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    class="w-full border border-gray-300 rounded-lg px-3 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
                                     required
                                 >
                                     <option value="">Vyberte lokaci...</option>
                                 </select>
+                                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                    <i class="fas fa-chevron-down text-gray-400 text-sm"></i>
+                                </div>
                             </div>
                             
                             <!-- Regál -->
-                            <div class="mb-2">
+                            <div class="mb-2 relative">
                                 <select 
                                     id="gb-regal" 
-                                    class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    class="w-full border border-gray-300 rounded-lg px-3 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
                                     required
                                     disabled
                                 >
                                     <option value="">Nejdříve vyberte lokaci...</option>
                                 </select>
+                                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                    <i class="fas fa-chevron-down text-gray-400 text-sm"></i>
+                                </div>
                             </div>
                             
                             <!-- Pozice -->
-                            <div>
+                            <div class="relative">
                                 <select 
                                     id="gb-pozice" 
                                     name="position_id"
-                                    class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    class="w-full border border-gray-300 rounded-lg px-3 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
                                     required
                                     disabled
                                 >
                                     <option value="">Nejdříve vyberte regál...</option>
                                 </select>
+                                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                    <i class="fas fa-chevron-down text-gray-400 text-sm"></i>
+                                </div>
                             </div>
                         </div>
 
@@ -248,23 +256,28 @@ class GitterboxModal {
                             <label for="gb-naplnenost" class="block text-sm font-medium text-gray-700 mb-2">
                                 Naplněnost (%)
                             </label>
-                            <select 
-                                id="gb-naplnenost" 
-                                name="naplnenost_procenta"
-                                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                                <option value="0">0%</option>
-                                <option value="10">10%</option>
-                                <option value="20">20%</option>
-                                <option value="30">30%</option>
-                                <option value="40">40%</option>
-                                <option value="50">50%</option>
-                                <option value="60">60%</option>
-                                <option value="70">70%</option>
-                                <option value="80">80%</option>
-                                <option value="90">90%</option>
-                                <option value="100">100%</option>
-                            </select>
+                            <div class="relative">
+                                <select 
+                                    id="gb-naplnenost" 
+                                    name="naplnenost_procenta"
+                                    class="w-full border border-gray-300 rounded-lg px-3 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                                >
+                                    <option value="0">0%</option>
+                                    <option value="10">10%</option>
+                                    <option value="20">20%</option>
+                                    <option value="30">30%</option>
+                                    <option value="40">40%</option>
+                                    <option value="50">50%</option>
+                                    <option value="60">60%</option>
+                                    <option value="70">70%</option>
+                                    <option value="80">80%</option>
+                                    <option value="90">90%</option>
+                                    <option value="100">100%</option>
+                                </select>
+                                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                    <i class="fas fa-chevron-down text-gray-400 text-sm"></i>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Poznámka -->
@@ -328,9 +341,12 @@ class GitterboxModal {
         });
 
         // Refresh GB numbers button
-        document.getElementById('refresh-gb-numbers').addEventListener('click', () => {
-            this.loadAvailableGBNumbers();
-        });
+        const refreshBtn = document.getElementById('refresh-gb-numbers');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', () => {
+                this.loadAvailableGBNumbers();
+            });
+        }
 
         // 3-level dropdown cascade
         document.getElementById('gb-lokace').addEventListener('change', (e) => {
@@ -340,12 +356,17 @@ class GitterboxModal {
         document.getElementById('gb-regal').addEventListener('change', (e) => {
             this.onShelfChange(e.target.value);
         });
+        
+        // Validace GB čísla při psaní
+        document.getElementById('gb-cislo').addEventListener('input', (e) => {
+            this.validateGbNumber(e.target.value);
+        });
     }
 
     async loadAvailablePositions() {
         try {
-            const response = await this.api.getLocations();
-            this.locations = response.data;
+            const response = await API.getLocations();
+            this.locations = response.data; // Použij response.data místo response
             this.updateLocationSelect();
         } catch (error) {
             console.error('Chyba při načítání lokací:', error);
@@ -409,7 +430,7 @@ class GitterboxModal {
 
         try {
             // Načti dostupné pozice pro regál
-            const response = await this.api.getShelfPositions(shelfId);
+            const response = await API.getShelfPositions(shelfId);
             const positions = response.data.pozice.filter(pos => !pos.gitterbox);
             
             if (positions.length === 0) {
@@ -451,10 +472,23 @@ class GitterboxModal {
         // Reset form
         document.getElementById('gitterbox-form').reset();
         
-        // Načti volná čísla GB
+        // Obnov GB číslo input pro nový záznam
+        const gbCisloInput = document.getElementById('gb-cislo');
+        gbCisloInput.disabled = false;
+        gbCisloInput.classList.remove('bg-gray-100', 'text-gray-600');
+        
+        // Zobraz pásek s čísly a refresh button
+        const numbersStrip = document.getElementById('available-numbers-strip');
+        const numbersInfo = document.getElementById('gb-numbers-info');
+        const refreshBtn = document.getElementById('refresh-gb-numbers');
+        if (numbersStrip) numbersStrip.style.display = 'block';
+        if (refreshBtn) refreshBtn.style.display = 'inline';
+        
+        // Načti volná čísla GB pro pásek
         await this.loadAvailableGBNumbers();
         
-        // Reset dropdowns
+        // Reset dropdowns až po načtení pozic
+        await this.loadAvailablePositions();
         document.getElementById('gb-regal').disabled = true;
         document.getElementById('gb-pozice').disabled = true;
         document.getElementById('gb-regal').innerHTML = '<option value="">Nejdříve vyberte lokaci...</option>';
@@ -462,17 +496,25 @@ class GitterboxModal {
         
         this.modalManager.openModal('gitterbox-modal');
         
-        // Pokud máme předvybranou pozici, automaticky ji nastav
+        // Pokud máme předvybranou pozici, automaticky ji nastav (TEPRVE PO otevření)
         if (preselectedPositionId) {
-            this.preselectPosition(preselectedPositionId);
+            setTimeout(() => {
+                this.preselectPosition(preselectedPositionId);
+            }, 100);
         }
     }
 
     async preselectPosition(positionId) {
         try {
-            // Najdi pozici podle ID
-            const response = await this.api.getAllPositions();
-            const position = response.data.find(p => p.id == positionId);
+            // Debug log
+            console.log('🔍 Předvybírám pozici:', positionId);
+            console.log('🔍 API object:', window.API);
+            console.log('🔍 API.getPosition:', window.API?.getPosition);
+            
+            // Získej detail pozice podle ID
+            const response = await API.getPosition(positionId);
+            console.log('✅ Position response:', response);
+            const position = response.data;
             
             if (position && position.shelf) {
                 const locationId = position.shelf.location.id;
@@ -517,8 +559,22 @@ class GitterboxModal {
         document.getElementById('gb-naplnenost').value = gb.naplnenost_procenta || 0;
         document.getElementById('gb-poznamka').value = gb.poznamka || '';
         
+        // Nastav GB číslo a zakáž editaci
+        const gbCisloInput = document.getElementById('gb-cislo');
+        gbCisloInput.value = gb.cislo_gb;
+        gbCisloInput.disabled = true;
+        gbCisloInput.classList.add('bg-gray-100', 'text-gray-600');
+        
+        // Skryj pásek s čísly při editaci
+        const numbersStrip = document.getElementById('available-numbers-strip');
+        const numbersInfo = document.getElementById('gb-numbers-info');
+        const refreshBtn = document.getElementById('refresh-gb-numbers');
+        if (numbersStrip) numbersStrip.style.display = 'none';
+        if (numbersInfo) numbersInfo.textContent = 'Číslo GB nelze při úpravě měnit';
+        if (refreshBtn) refreshBtn.style.display = 'none';
+        
         // Resetuj a nastav dropdowns
-        await this.loadLocations();
+        await this.loadAvailablePositions();
         
         // Nastav současnou pozici
         if (gb.position_id && gb.lokace && gb.regal) {
@@ -533,7 +589,7 @@ class GitterboxModal {
             
             // Načti regály pro vybranou lokaci
             if (locationSelect.value) {
-                await this.loadShelves(locationSelect.value);
+                await this.onLocationChange(locationSelect.value);
                 
                 // Najdi regál podle názvu
                 const regalSelect = document.getElementById('gb-regal');
@@ -546,7 +602,7 @@ class GitterboxModal {
                 
                 // Načti pozice pro vybraný regál
                 if (regalSelect.value) {
-                    await this.loadPositions(regalSelect.value);
+                    await this.onShelfChange(regalSelect.value);
                     
                     // Nastav současnou pozici
                     document.getElementById('gb-pozice').value = gb.position_id;
@@ -573,15 +629,21 @@ class GitterboxModal {
             return;
         }
 
+        // Validace rozsahu čísla GB
+        if (data.cislo_gb < 1) {
+            this.modalManager.showError('Číslo GB musí být alespoň 1');
+            return;
+        }
+
         const originalText = this.modalManager.showLoading('gb-submit-btn');
 
         try {
             let result;
             if (this.mode === 'create') {
-                result = await this.api.createGitterbox(data);
+                result = await API.createGitterbox(data);
                 this.modalManager.showSuccess(`Gitterbox #${result.cislo_gb} byl úspěšně vytvořen`);
             } else {
-                result = await this.api.updateGitterbox(this.editingGbId, data);
+                result = await API.updateGitterbox(this.editingGbId, data);
                 this.modalManager.showSuccess(`Gitterbox #${result.cislo_gb} byl úspěšně aktualizován`);
             }
 
@@ -594,49 +656,139 @@ class GitterboxModal {
             
         } catch (error) {
             console.error('Chyba při ukládání GB:', error);
-            this.modalManager.showError('Nepodařilo se uložit Gitterbox: ' + error.message);
+            let errorMessage = 'Nepodařilo se uložit Gitterbox';
+            
+            if (error.response && error.response.data && error.response.data.detail) {
+                errorMessage = error.response.data.detail;
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+            
+            this.modalManager.showError(errorMessage);
         } finally {
             this.modalManager.hideLoading('gb-submit-btn', originalText);
         }
     }
 
     async loadAvailableGBNumbers() {
-        const select = document.getElementById('gb-cislo');
+        const strip = document.getElementById('available-numbers-strip');
+        const info = document.getElementById('gb-numbers-info');
+        
+        if (!strip || !info) {
+            console.error('Elementy pro GB čísla nenalezeny');
+            return;
+        }
         
         try {
-            // Načti volná čísla GB z API
-            const response = await this.api.get('/api/gitterboxes/available-numbers');
-            const data = response.data;
+            // Zobrazit loading stav
+            strip.innerHTML = '<div class="text-gray-500 text-sm">Načítám...</div>';
+            info.textContent = 'Načítám dostupná čísla...';
             
-            // Vyčisti dropdown
-            select.innerHTML = '<option value="">Vyberte číslo GB...</option>';
+            // Debug log
+            console.log('🔍 Načítám volná čísla GB...');
+            console.log('🔍 API object:', window.API);
+            console.log('🔍 API.getAvailableGBNumbers:', window.API?.getAvailableGBNumbers);
+            
+            // Načti volná čísla GB z API
+            const response = await API.getAvailableGBNumbers();
+            console.log('✅ Response:', response);
+            const data = response; // Response už obsahuje přímo data, ne zabalená
             
             if (data.volna_cisla.length === 0) {
-                select.innerHTML = '<option value="">Žádná volná čísla</option>';
-                select.disabled = true;
+                strip.innerHTML = '<div class="text-red-500 text-sm">Žádná volná čísla</div>';
+                info.textContent = 'Všechna čísla GB jsou obsazená!';
                 return;
             }
             
-            // Přidej volná čísla
-            data.volna_cisla.forEach(cislo => {
-                const option = document.createElement('option');
-                option.value = cislo;
-                option.textContent = `GB #${cislo}`;
-                select.appendChild(option);
+            // Vytvoř horizontální pásek s klikatelnými čísly
+            const numbersContainer = document.createElement('div');
+            numbersContainer.className = 'flex flex-wrap gap-1 min-w-max';
+            
+            // Zobraz všechna volná čísla (ne jen prvních 20)
+            data.volna_cisla.slice(0, 50).forEach(cislo => { // Omezit na 50 pro performance
+                const numberBtn = document.createElement('button');
+                numberBtn.type = 'button';
+                numberBtn.className = 'px-2 py-1 text-xs bg-green-100 hover:bg-green-200 text-green-800 rounded border border-green-300 transition-colors';
+                numberBtn.textContent = cislo;
+                numberBtn.title = `Klikněte pro vybrání čísla ${cislo}`;
+                
+                numberBtn.addEventListener('click', () => {
+                    document.getElementById('gb-cislo').value = cislo;
+                    // Zvýrazni vybrané číslo
+                    numbersContainer.querySelectorAll('button').forEach(btn => {
+                        btn.classList.remove('bg-blue-500', 'text-white');
+                        btn.classList.add('bg-green-100', 'text-green-800');
+                    });
+                    numberBtn.classList.remove('bg-green-100', 'text-green-800');
+                    numberBtn.classList.add('bg-blue-500', 'text-white');
+                });
+                
+                numbersContainer.appendChild(numberBtn);
             });
             
-            select.disabled = false;
+            strip.innerHTML = '';
+            strip.appendChild(numbersContainer);
             
             // Aktualizuj info text
-            const infoText = select.parentElement.parentElement.querySelector('.text-xs');
-            if (infoText) {
-                infoText.textContent = `Volných čísel: ${data.celkem_volnych} z ${data.max_cislo}`;
-            }
+            const totalShown = Math.min(50, data.volna_cisla.length);
+            info.textContent = `Volných čísel: ${data.celkem_volnych} z ${data.max_cislo} (zobrazeno prvních ${totalShown})`;
+            
+            console.log(`Načteno ${data.volna_cisla.length} volných GB čísel`);
             
         } catch (error) {
             console.error('Chyba při načítání volných čísel GB:', error);
-            select.innerHTML = '<option value="">Chyba při načítání</option>';
-            select.disabled = true;
+            strip.innerHTML = '<div class="text-red-500 text-sm">Chyba při načítání</div>';
+            info.textContent = 'Chyba při načítání čísel GB';
+            
+            // Zobrazit toast chybu
+            if (this.modalManager) {
+                this.modalManager.showError('Chyba při načítání čísel GB');
+            }
+        }
+    }
+
+    validateGbNumber(value) {
+        const input = document.getElementById('gb-cislo');
+        const info = document.getElementById('gb-numbers-info');
+        
+        if (!value || value === '') {
+            input.classList.remove('border-red-500', 'border-green-500');
+            input.classList.add('border-gray-300');
+            return;
+        }
+        
+        const num = parseInt(value);
+        
+        if (isNaN(num) || num < 1) {
+            input.classList.remove('border-green-500', 'border-gray-300');
+            input.classList.add('border-red-500');
+            if (info) info.textContent = 'Číslo GB musí být alespoň 1';
+            return;
+        }
+        
+        // Zkontroluj proti seznamu obsazených čísel (asynchronně)
+        this.checkNumberAvailability(num);
+    }
+
+    async checkNumberAvailability(number) {
+        const input = document.getElementById('gb-cislo');
+        const info = document.getElementById('gb-numbers-info');
+        
+        try {
+            const response = await API.getAvailableGBNumbers();
+            const data = response; // Opraveno - použij response přímo
+            
+            if (data.volna_cisla.includes(number)) {
+                input.classList.remove('border-red-500', 'border-gray-300');
+                input.classList.add('border-green-500');
+                if (info) info.textContent = `✅ Číslo ${number} je volné`;
+            } else {
+                input.classList.remove('border-green-500', 'border-gray-300');
+                input.classList.add('border-red-500');
+                if (info) info.textContent = `❌ Číslo ${number} je již obsazené`;
+            }
+        } catch (error) {
+            console.error('Chyba při kontrole dostupnosti čísla:', error);
         }
     }
 }
@@ -670,8 +822,8 @@ class ItemModal {
                             <i class="fas fa-box text-green-500 mr-2"></i>
                             Nová položka
                         </h2>
-                        <button id="item-modal-close" class="text-gray-400 hover:text-gray-600">
-                            <i class="fas fa-times text-xl"></i>
+                        <button id="item-modal-close" class="text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg p-1 transition-colors">
+                            <i class="fas fa-times text-2xl"></i>
                         </button>
                     </div>
                 </div>
@@ -951,10 +1103,10 @@ class ItemModal {
         try {
             let result;
             if (this.mode === 'create') {
-                result = await this.api.createItem(data);
+                result = await API.createItem(data);
                 this.modalManager.showSuccess(`Položka "${result.nazev_dilu}" byla úspěšně přidána`);
             } else {
-                result = await this.api.updateItem(this.editingItemId, data);
+                result = await API.updateItem(this.editingItemId, data);
                 this.modalManager.showSuccess(`Položka "${result.nazev_dilu}" byla úspěšně aktualizována`);
             }
 
@@ -976,3 +1128,7 @@ class ItemModal {
 
 // Global instances
 window.modalManager = new ModalManager();
+
+// Export tříd pro použití v app.js
+window.GitterboxModal = GitterboxModal;
+window.ItemModal = ItemModal;

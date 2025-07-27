@@ -138,7 +138,7 @@ def get_available_gb_numbers(db: Session = Depends(get_database)):
     volna_cisla = [cislo for cislo in range(1, max_cislo + 1) if cislo not in obsazena_cisla]
     
     return {
-        "volna_cisla": volna_cisla[:20],  # Prvních 20 pro dropdown
+        "volna_cisla": volna_cisla,  # Všechna volná čísla, ne jen prvních 20
         "celkem_volnych": len(volna_cisla),
         "celkem_obsazenych": len(obsazena_cisla),
         "max_cislo": max_cislo

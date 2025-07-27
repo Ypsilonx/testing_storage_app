@@ -37,10 +37,10 @@ class SkladovaApp {
         // Modal manager je již globálně dostupný z modals.js
         if (window.modalManager) {
             // Inicializace Gitterbox modalu
-            this.gitterboxModal = new GitterboxModal(window.modalManager, API);
+            this.gitterboxModal = new GitterboxModal(window.modalManager);
             
             // Inicializace Item modalu
-            this.itemModal = new ItemModal(window.modalManager, API);
+            this.itemModal = new ItemModal(window.modalManager);
             
             // Globální přístup pro debug
             window.gitterboxModal = this.gitterboxModal;
