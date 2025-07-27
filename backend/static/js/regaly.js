@@ -764,6 +764,10 @@ class RegalyTab {
                     for (const shelf of location.regaly) {
                         try {
                             const response = await API.getShelfPositions(shelf.id);
+                            // Dvojitá kontrola pro jistotu
+                            if (!this.allShelvesData) {
+                                this.allShelvesData = [];
+                            }
                             this.allShelvesData.push({
                                 shelf: shelf,
                                 location: location,
@@ -772,6 +776,10 @@ class RegalyTab {
                         } catch (error) {
                             console.warn(`Chyba při načítání pozic pro regál ${shelf.nazev}:`, error);
                             // Přidej prázdné pozice aby se regál zobrazil
+                            // Dvojitá kontrola pro jistotu
+                            if (!this.allShelvesData) {
+                                this.allShelvesData = [];
+                            }
                             this.allShelvesData.push({
                                 shelf: shelf,
                                 location: location,
@@ -857,9 +865,10 @@ class RegalyTab {
      * Refresh všech dat
      */
     async refresh() {
-        // Vymaž cache
+        // Vymaž cache pozic, ale zachovej základní strukturu
         this.allShelvesData = null;
         
+        // Znovu načti všechna základní data
         await this.loadInitialData();
         
         // Pokud máme vybraný regál, obnovíme i pozice
@@ -884,12 +893,27 @@ document.addEventListener('DOMContentLoaded', () => {
     window.regalyManager = regalyTab;
     
     // Registrace refresh callbacku do hlavní aplikace
-    if (window.app) {
-        window.app.registerRefreshCallback('regaly', () => regalyTab.refresh());
-    } else {
-        // Pokud app ještě není inicializovaná, počkáme
-        document.addEventListener('app-ready', () => {
+    const registerCallback = () => {
+        if (window.app && window.app.registerRefreshCallback) {
             window.app.registerRefreshCallback('regaly', () => regalyTab.refresh());
+            console.log('✅ Regaly callback registrován');
+            return true;
+        }
+        return false;
+    };
+    
+    // Pokusíme se registrovat ihned
+    if (!registerCallback()) {
+        // Pokud se nepodařilo, zkusíme počkat na app-ready event
+        document.addEventListener('app-ready', () => {
+            registerCallback();
         });
+        
+        // Alternativní fallback - zkusíme to znovu za chvíli
+        setTimeout(() => {
+            if (!registerCallback()) {
+                console.warn('⚠️ Nepodařilo se registrovat regaly callback');
+            }
+        }, 100);
     }
 });

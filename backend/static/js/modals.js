@@ -720,14 +720,14 @@ class GitterboxModal {
             this.modalManager.closeModal();
             
             // Použijeme centralizovaný refresh systém
-            if (window.app && window.app.refreshData) {
-                window.app.refreshData();
+            if (window.app && window.app.refreshAllTabs) {
+                window.app.refreshAllTabs();
             } else {
                 // Fallback na přímé volání manažerů
-                if (window.regalyManager) {
-                    window.regalyManager.loadData();
+                if (window.regalyManager && window.regalyManager.refresh) {
+                    window.regalyManager.refresh();
                 }
-                if (window.vyhledavaniTab) {
+                if (window.vyhledavaniTab && window.vyhledavaniTab.refresh) {
                     window.vyhledavaniTab.refresh();
                 }
             }
@@ -1191,14 +1191,14 @@ class ItemModal {
             this.modalManager.closeModal();
             
             // Použijeme centralizovaný refresh systém
-            if (window.app && window.app.refreshData) {
-                window.app.refreshData();
+            if (window.app && window.app.refreshAllTabs) {
+                window.app.refreshAllTabs();
             } else {
                 // Fallback na přímé volání manažerů
-                if (window.regalyManager) {
-                    window.regalyManager.loadData();
+                if (window.regalyManager && window.regalyManager.refresh) {
+                    window.regalyManager.refresh();
                 }
-                if (window.vyhledavaniTab) {
+                if (window.vyhledavaniTab && window.vyhledavaniTab.refresh) {
                     window.vyhledavaniTab.refresh();
                 }
             }

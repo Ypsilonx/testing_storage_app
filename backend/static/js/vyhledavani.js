@@ -498,12 +498,27 @@ document.addEventListener('DOMContentLoaded', () => {
     window.vyhledavaniManager = vyhledavaniTab;
     
     // Registrace refresh callbacku do hlavní aplikace
-    if (window.app) {
-        window.app.registerRefreshCallback('vyhledavani', () => vyhledavaniTab.refresh());
-    } else {
-        // Pokud app ještě není inicializovaná, počkáme
-        document.addEventListener('app-ready', () => {
+    const registerCallback = () => {
+        if (window.app && window.app.registerRefreshCallback) {
             window.app.registerRefreshCallback('vyhledavani', () => vyhledavaniTab.refresh());
+            console.log('✅ Vyhledavani callback registrován');
+            return true;
+        }
+        return false;
+    };
+    
+    // Pokusíme se registrovat ihned
+    if (!registerCallback()) {
+        // Pokud se nepodařilo, zkusíme počkat na app-ready event
+        document.addEventListener('app-ready', () => {
+            registerCallback();
         });
+        
+        // Alternativní fallback - zkusíme to znovu za chvíli
+        setTimeout(() => {
+            if (!registerCallback()) {
+                console.warn('⚠️ Nepodařilo se registrovat vyhledavani callback');
+            }
+        }, 100);
     }
 });

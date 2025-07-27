@@ -20,9 +20,11 @@ class SkladovaApp {
      * Registrace callback funkce pro refreshování dat
      */
     registerRefreshCallback(tab, callback) {
-        if (this.refreshCallbacks[tab]) {
-            this.refreshCallbacks[tab].push(callback);
+        if (!this.refreshCallbacks[tab]) {
+            this.refreshCallbacks[tab] = [];
         }
+        this.refreshCallbacks[tab].push(callback);
+        console.log(`✅ Registrován refresh callback pro tab: ${tab}`);
     }
 
     /**
@@ -31,16 +33,25 @@ class SkladovaApp {
     async refreshData(tabName = null) {
         const tabsToRefresh = tabName ? [tabName] : [this.activeTab];
         
+        console.log(`🔄 Spouštím refresh pro taby:`, tabsToRefresh);
+        console.log(`📋 Dostupné callbacky:`, Object.keys(this.refreshCallbacks));
+        
         for (const tab of tabsToRefresh) {
-            if (this.refreshCallbacks[tab]) {
-                console.log(`🔄 Refreshuji data pro tab: ${tab}`);
+            console.log(`🔍 Kontroluji tab: ${tab}`);
+            console.log(`📋 Callbacky pro ${tab}:`, this.refreshCallbacks[tab]);
+            
+            if (this.refreshCallbacks[tab] && this.refreshCallbacks[tab].length > 0) {
+                console.log(`🔄 Refreshuji data pro tab: ${tab} (${this.refreshCallbacks[tab].length} callbacků)`);
                 for (const callback of this.refreshCallbacks[tab]) {
                     try {
                         await callback();
+                        console.log(`✅ Callback dokončen pro tab: ${tab}`);
                     } catch (error) {
-                        console.error(`Chyba při refreshu ${tab}:`, error);
+                        console.error(`❌ Chyba při refreshu ${tab}:`, error);
                     }
                 }
+            } else {
+                console.warn(`⚠️ Žádné callbacky pro tab: ${tab}`);
             }
         }
     }
@@ -64,6 +75,11 @@ class SkladovaApp {
             this.attachEventListeners();
             await this.performHealthCheck();
             this.isInitialized = true;
+            
+            // Oznámíme ostatním komponentám, že aplikace je připravena
+            const event = new CustomEvent('app-ready');
+            document.dispatchEvent(event);
+            console.log('🚀 Aplikace inicializována, spuštěn app-ready event');
             
             console.log('📦 Skladová aplikace úspěšně spuštěna');
         } catch (error) {
