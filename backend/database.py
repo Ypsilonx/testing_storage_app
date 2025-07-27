@@ -13,8 +13,8 @@ from dotenv import load_dotenv
 # Načtení environment proměnných
 load_dotenv()
 
-# Databázová URL
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./storage.db")
+# Databázová URL - cesta k hlavní databázi v kořenovém adresáři
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///../storage.db")
 
 # SQLAlchemy engine
 engine = create_engine(

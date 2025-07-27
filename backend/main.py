@@ -12,9 +12,9 @@ from sqlalchemy.orm import Session
 import os
 from pathlib import Path
 
-from database import get_database, init_database, get_storage_statistics
-from models import Location, Shelf, Position, Gitterbox, Item
-from routers import gitterboxes, items, positions
+from .database import get_database, init_database, get_storage_statistics
+from .models import Location, Shelf, Position, Gitterbox, Item
+from .routers import gitterboxes, items, positions
 
 # Vytvoření FastAPI aplikace
 app = FastAPI(

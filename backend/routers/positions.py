@@ -12,6 +12,35 @@ from models import Position, Shelf, Location
 
 router = APIRouter(prefix="/api/positions", tags=["positions"])
 
+@router.get("/shelves")
+async def get_shelves(db: Session = Depends(get_database)):
+    """Získání všech regálů pro dropdown formuláře"""
+    try:
+        shelves = db.query(Shelf).all()
+        
+        result = []
+        for shelf in shelves:
+            result.append({
+                "id": shelf.id,
+                "nazev": shelf.nazev,
+                "radky": shelf.radky,
+                "sloupce": shelf.sloupce,
+                "typ": shelf.typ,
+                "location": {
+                    "id": shelf.lokace.id,
+                    "nazev": shelf.lokace.nazev
+                }
+            })
+        
+        return {
+            "status": "success",
+            "data": result,
+            "message": f"Načteno {len(result)} regálů"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Chyba při načítání regálů: {str(e)}")
+
 @router.get("/")
 async def get_all_positions(db: Session = Depends(get_database)):
     """Získání všech pozic se základními informacemi"""
@@ -28,13 +57,13 @@ async def get_all_positions(db: Session = Depends(get_database)):
                 "nazev_pozice": pos.nazev_pozice,
                 "status": pos.status,
                 "shelf": {
-                    "id": pos.shelf.id,
-                    "nazev": pos.shelf.nazev,
+                    "id": pos.regal.id,
+                    "nazev": pos.regal.nazev,
                     "location": {
-                        "id": pos.shelf.location.id,
-                        "nazev": pos.shelf.location.nazev
+                        "id": pos.regal.lokace.id,
+                        "nazev": pos.regal.lokace.nazev
                     }
-                } if pos.shelf else None,
+                } if pos.regal else None,
                 "je_obsazena": pos.gitterbox is not None,
                 "gitterbox_cislo": pos.gitterbox.cislo_gb if pos.gitterbox else None
             })
@@ -69,15 +98,15 @@ async def get_available_positions(db: Session = Depends(get_database)):
                 "sloupec": pos.sloupec,
                 "nazev_pozice": pos.nazev_pozice,
                 "shelf": {
-                    "id": pos.shelf.id,
-                    "nazev": pos.shelf.nazev,
-                    "radky": pos.shelf.radky,
-                    "sloupce": pos.shelf.sloupce,
+                    "id": pos.regal.id,
+                    "nazev": pos.regal.nazev,
+                    "radky": pos.regal.radky,
+                    "sloupce": pos.regal.sloupce,
                     "location": {
-                        "id": pos.shelf.location.id,
-                        "nazev": pos.shelf.location.nazev
+                        "id": pos.regal.lokace.id,
+                        "nazev": pos.regal.lokace.nazev
                     }
-                } if pos.shelf else None
+                } if pos.regal else None
             })
         
         # Seřaď podle lokace, regálu a pozice
@@ -113,17 +142,17 @@ async def get_position(position_id: int, db: Session = Depends(get_database)):
             "nazev_pozice": position.nazev_pozice,
             "status": position.status,
             "shelf": {
-                "id": position.shelf.id,
-                "nazev": position.shelf.nazev,
-                "radky": position.shelf.radky,
-                "sloupce": position.shelf.sloupce,
-                "typ": position.shelf.typ,
+                "id": position.regal.id,
+                "nazev": position.regal.nazev,
+                "radky": position.regal.radky,
+                "sloupce": position.regal.sloupce,
+                "typ": position.regal.typ,
                 "location": {
-                    "id": position.shelf.location.id,
-                    "nazev": position.shelf.location.nazev,
-                    "popis": position.shelf.location.popis
+                    "id": position.regal.lokace.id,
+                    "nazev": position.regal.lokace.nazev,
+                    "popis": position.regal.lokace.popis
                 }
-            } if position.shelf else None,
+            } if position.regal else None,
             "gitterbox": None
         }
         

@@ -30,11 +30,15 @@ router = APIRouter(prefix="/api/gitterboxes", tags=["gitterboxes"])
 from pydantic import BaseModel
 
 class GitterboxCreate(BaseModel):
+    cislo_gb: int  # Uživatel si vybere číslo GB
     zodpovedna_osoba: str
+    position_id: int
+    naplnenost_procenta: Optional[int] = 0
     poznamka: Optional[str] = None
 
 class GitterboxUpdate(BaseModel):
     zodpovedna_osoba: Optional[str] = None
+    position_id: Optional[int] = None  # Umožní přemístění GB
     naplnenost_procenta: Optional[int] = None
     stav: Optional[str] = None
     poznamka: Optional[str] = None
@@ -117,6 +121,30 @@ def get_all_gitterboxes(
         "message": f"Načteno {len(result)} Gitterboxů"
     }
 
+
+@router.get("/available-numbers")
+def get_available_gb_numbers(db: Session = Depends(get_database)):
+    """Vrátí seznam volných čísel GB"""
+    
+    max_cislo = get_total_positions()
+    
+    # Získáme všechna obsazená čísla
+    obsazena_cisla = set(
+        result[0] for result in 
+        db.query(Gitterbox.cislo_gb).filter(Gitterbox.stav == "aktivni").all()
+    )
+    
+    # Najdeme volná čísla
+    volna_cisla = [cislo for cislo in range(1, max_cislo + 1) if cislo not in obsazena_cisla]
+    
+    return {
+        "volna_cisla": volna_cisla[:20],  # Prvních 20 pro dropdown
+        "celkem_volnych": len(volna_cisla),
+        "celkem_obsazenych": len(obsazena_cisla),
+        "max_cislo": max_cislo
+    }
+
+
 @router.get("/{gb_id}", response_model=GitterboxResponse)
 def get_gitterbox(gb_id: int, db: Session = Depends(get_database)):
     """Získá detail konkrétního Gitterboxu"""
@@ -167,52 +195,60 @@ def get_gitterbox_by_number(cislo_gb: int, db: Session = Depends(get_database)):
 
 @router.post("/", response_model=GitterboxResponse)
 def create_gitterbox(gitterbox_data: GitterboxCreate, db: Session = Depends(get_database)):
-    """Vytvoří nový Gitterbox s automatickým přidělením pozice a čísla"""
+    """Vytvoří nový Gitterbox na zadané pozici s automatickým přidělením čísla"""
     
-    # 1. Najdeme první volnou pozici
-    volna_pozice = db.query(Position).filter(Position.status == "volna").first()
-    if not volna_pozice:
-        raise HTTPException(status_code=400, detail="Žádné volné pozice ve skladu")
+    # 1. Ověříme že pozice existuje a je volná
+    pozice = db.query(Position).filter(Position.id == gitterbox_data.position_id).first()
+    if not pozice:
+        raise HTTPException(status_code=404, detail="Pozice nebyla nalezena")
     
-    # 2. Najdeme nejnižší dostupné číslo GB
+    if pozice.status != "volna":
+        raise HTTPException(status_code=400, detail="Pozice není volná")
+    
+    # Zkontrolujeme zda na pozici už není GB
+    existing_gb = db.query(Gitterbox).filter(
+        Gitterbox.position_id == gitterbox_data.position_id,
+        Gitterbox.stav == "aktivni"
+    ).first()
+    if existing_gb:
+        raise HTTPException(status_code=400, detail=f"Na pozici už je GB #{existing_gb.cislo_gb}")
+    
+    # 2. Zkontrolujeme dostupnost čísla GB
+    if gitterbox_data.cislo_gb < 1:
+        raise HTTPException(status_code=422, detail="Číslo GB musí být alespoň 1")
+    
     max_cislo = get_total_positions()  # Maximum podle konfigurace
+    if gitterbox_data.cislo_gb > max_cislo:
+        raise HTTPException(status_code=422, detail=f"Číslo GB nesmí být větší než {max_cislo}")
     
-    # Získáme všechna obsazená čísla
-    obsazena_cisla = set(
-        result[0] for result in 
-        db.query(Gitterbox.cislo_gb).filter(Gitterbox.stav == "aktivni").all()
-    )
-    
-    # Najdeme první volné číslo
-    nove_cislo = None
-    for cislo in range(1, max_cislo + 1):
-        if cislo not in obsazena_cisla:
-            nove_cislo = cislo
-            break
-    
-    if nove_cislo is None:
-        raise HTTPException(status_code=400, detail=f"Všechna čísla GB (1-{max_cislo}) jsou obsazena")
-    
+    # Zkontrolujeme zda číslo GB už není použité
+    existing_gb_by_number = db.query(Gitterbox).filter(
+        Gitterbox.cislo_gb == gitterbox_data.cislo_gb,
+        Gitterbox.stav == "aktivni"
+    ).first()
+    if existing_gb_by_number:
+        raise HTTPException(status_code=400, detail=f"Číslo GB #{gitterbox_data.cislo_gb} už je obsazené")
+
     # 3. Vytvoříme nový Gitterbox
     new_gb = Gitterbox(
-        cislo_gb=nove_cislo,
-        position_id=volna_pozice.id,
+        cislo_gb=gitterbox_data.cislo_gb,  # Použijeme číslo z uživatelského vstupu
+        position_id=gitterbox_data.position_id,
         zodpovedna_osoba=gitterbox_data.zodpovedna_osoba,
+        naplnenost_procenta=gitterbox_data.naplnenost_procenta or 0,
         poznamka=gitterbox_data.poznamka,
         datum_zalozeni=date.today(),
-        naplnenost_procenta=0,
         stav="aktivni"
     )
     
     # 4. Označíme pozici jako obsazenou
-    volna_pozice.status = "obsazena"
+    pozice.status = "obsazena"
     
     # 5. Uložíme do databáze
     db.add(new_gb)
     db.commit()
     db.refresh(new_gb)
     
-    print(f"✅ Vytvořen nový Gitterbox #{nove_cislo} pro {gitterbox_data.zodpovedna_osoba}")
+    print(f"✅ Vytvořen nový Gitterbox #{gitterbox_data.cislo_gb} na pozici {pozice.radek}-{pozice.sloupec} pro {gitterbox_data.zodpovedna_osoba}")
     
     return get_gitterbox(new_gb.id, db)
 

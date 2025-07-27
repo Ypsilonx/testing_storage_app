@@ -441,8 +441,8 @@ class RegalyTab {
         modal.className = 'modal-overlay fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4';
         
         modal.innerHTML = `
-            <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-96 overflow-y-auto">
-                <div class="p-6">
+            <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col">
+                <div class="p-6 flex-shrink-0">
                     <!-- Header -->
                     <div class="flex justify-between items-center mb-6">
                         <h2 class="text-xl font-bold text-gray-900">
@@ -498,52 +498,56 @@ class RegalyTab {
                         </button>
                     </div>
 
-                    <!-- Items list -->
-                    <div>
-                        <h3 class="text-lg font-semibold mb-3">
-                            Položky (${items.length})
-                        </h3>
-                        ${items.length > 0 ? `
-                            <div class="space-y-2">
-                                ${items.map(item => `
-                                    <div class="bg-white border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition-colors">
-                                        <div class="flex justify-between items-start">
-                                            <div class="flex-1">
-                                                <h4 class="font-medium text-gray-900">${item.nazev_dilu}</h4>
-                                                <div class="text-sm text-gray-600 mt-1">
-                                                    ${item.tma_cislo ? `<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded mr-2">TMA: ${item.tma_cislo}</span>` : ''}
-                                                    ${item.projekt ? `<span class="bg-green-100 text-green-800 px-2 py-1 rounded mr-2">${item.projekt}</span>` : ''}
-                                                    <span class="font-medium">${item.popis_mnozstvi}</span>
-                                                </div>
-                                                ${item.sledovat_expiraci && item.expiracni_datum ? `
-                                                    <div class="text-xs mt-2 ${item.je_blizko_expirace ? 'text-red-600' : 'text-gray-500'}">
-                                                        <i class="fas fa-calendar mr-1"></i>
-                                                        Expirace: ${formatDate(item.expiracni_datum)}
-                                                        ${item.dny_do_expirace !== null ? ` (${item.dny_do_expirace} dní)` : ''}
-                                                    </div>
-                                                ` : ''}
-                                            </div>
-                                            <button class="edit-item-btn text-gray-400 hover:text-orange-600 ml-2" data-item-id="${item.id}">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        ` : `
-                            <div class="text-center py-8 text-gray-500">
-                                <i class="fas fa-box-open text-4xl mb-3 text-gray-300"></i>
-                                <p>Zatím žádné položky</p>
-                                <button id="add-first-item-btn" class="mt-3 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
-                                    <i class="fas fa-plus mr-2"></i>
-                                    Přidat první položku
-                                </button>
-                            </div>
-                        `}
-                    </div>
+                    <!-- Items header -->
+                    <h3 class="text-lg font-semibold mb-3">
+                        Položky (${items.length})
+                    </h3>
+                </div>
 
-                    <!-- Close button -->
-                    <div class="mt-6 text-center">
+                <!-- Scrollable Items List -->
+                <div class="flex-1 overflow-y-auto px-6">
+                    ${items.length > 0 ? `
+                        <div class="space-y-2 pb-4">
+                            ${items.map(item => `
+                                <div class="bg-white border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition-colors">
+                                    <div class="flex justify-between items-start">
+                                        <div class="flex-1">
+                                            <h4 class="font-medium text-gray-900">${item.nazev_dilu}</h4>
+                                            <div class="text-sm text-gray-600 mt-1">
+                                                ${item.tma_cislo ? `<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded mr-2">TMA: ${item.tma_cislo}</span>` : ''}
+                                                ${item.projekt ? `<span class="bg-green-100 text-green-800 px-2 py-1 rounded mr-2">${item.projekt}</span>` : ''}
+                                                <span class="font-medium">${item.popis_mnozstvi}</span>
+                                            </div>
+                                            ${item.sledovat_expiraci && item.expiracni_datum ? `
+                                                <div class="text-xs mt-2 ${item.je_blizko_expirace ? 'text-red-600' : 'text-gray-500'}">
+                                                    <i class="fas fa-calendar mr-1"></i>
+                                                    Expirace: ${formatDate(item.expiracni_datum)}
+                                                    ${item.dny_do_expirace !== null ? ` (${item.dny_do_expirace} dní)` : ''}
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                        <button class="edit-item-btn text-gray-400 hover:text-orange-600 ml-2" data-item-id="${item.id}">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : `
+                        <div class="text-center py-8 text-gray-500">
+                            <i class="fas fa-box-open text-4xl mb-3 text-gray-300"></i>
+                            <p>Zatím žádné položky</p>
+                            <button id="add-first-item-btn" class="mt-3 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                <i class="fas fa-plus mr-2"></i>
+                                Přidat první položku
+                            </button>
+                        </div>
+                    `}
+                </div>
+
+                <!-- Fixed Footer -->
+                <div class="p-6 border-t border-gray-200 flex-shrink-0">
+                    <div class="text-center">
                         <button id="gb-detail-close-btn" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-6 py-2 rounded-lg transition-colors">
                             <i class="fas fa-times mr-2"></i>
                             Zavřít
@@ -627,7 +631,7 @@ class RegalyTab {
      */
     showNewGbModal(poziceId = null) {
         if (window.gitterboxModal) {
-            window.gitterboxModal.openCreate();
+            window.gitterboxModal.openCreate(poziceId);
         } else {
             // Fallback pro případ, že modal není inicializovaný
             const osoba = prompt('Zadejte zodpovědnou osobu:');

@@ -14,7 +14,9 @@
 - **Phase 1 kompletní** - Backend základ, databáze, API endpointy
 - **Phase 2.1 kompletní** - Gitterbox CRUD API s globálním číslováním
   - `/api/gitterboxes/` - vytvoření, seznam, detail, úprava, smazání
-  - Automatické přiřazování pozic 1-115
+  - **FIX KRITICKÝ**: Uživatelsky volitelné číslování GB místo automatického podle pozice ✅
+  - Stabilní číslování nezávislé na pozicích s validací duplicit ✅
+  - Endpoint `/api/gitterboxes/available-numbers` pro výběr čísel ✅
   - Relace s lokacemi/regály/pozicemi fungují
   - API testováno a funkční
 - **Phase 3.1 KOMPLETNÍ** - Frontend základy s opravami
@@ -37,6 +39,7 @@
 - **Phase 3.4 KOMPLETNÍ** - CRUD formuláře pro praktickou správu
   - **KOMPLETNÍ**: Modal systém s loading states a error handling ✅
   - **KOMPLETNÍ**: Formulář pro vytvoření nového Gitterboxu s výběrem pozice ✅
+  - **KOMPLETNÍ**: Uživatelský výběr čísla GB místo automatického přiřazování ✅
   - **KOMPLETNÍ**: Formulář pro přidání položek s expirační logikou ✅
   - **KOMPLETNÍ**: Formuláře pro úpravu existujících GB a položek ✅
   - **KOMPLETNÍ**: Interaktivní detail modal s možnostmi úprav ✅
@@ -58,6 +61,7 @@
 ## 🎯 KLÍČOVÉ FUNKCE
 - [x] ✅ Plán a architektura definována
 - [x] ✅ Globální číslování GB (1 až max pozic celého skladu) - API implementováno
+- [x] ✅ Uživatelsky volitelné číslování GB s validací duplicit
 - [ ] 🔄 Dvoustupňové založení: GB → přidávání položek
 - [ ] 🔄 Flexibilní sledování expirací (lze vypnout)
 - [x] ✅ Skladové číslování pozic - warehouse standard (1-1 = spodní levá pozice)
@@ -96,7 +100,7 @@
 
 ### FÁZE 2: GITTERBOX MANAGEMENT (týden 2)
 - [x] 2.1 API pro správu Gitterboxů ✅ (27.7.2025)
-- [ ] 2.2 Globální číslování a kontrola dostupnosti
+- [x] 2.2 Globální číslování a kontrola dostupnosti ✅ (27.7.2025)
 - [ ] 2.3 API pro správu položek
 - [ ] 2.4 Logika expirací a naplněnosti
 - [ ] 2.5 Testy backend funkcionalit
