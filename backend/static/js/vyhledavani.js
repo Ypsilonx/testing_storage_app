@@ -495,4 +495,15 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Export do window pro debugování
     window.vyhledavaniTab = vyhledavaniTab;
+    window.vyhledavaniManager = vyhledavaniTab;
+    
+    // Registrace refresh callbacku do hlavní aplikace
+    if (window.app) {
+        window.app.registerRefreshCallback('vyhledavani', () => vyhledavaniTab.refresh());
+    } else {
+        // Pokud app ještě není inicializovaná, počkáme
+        document.addEventListener('app-ready', () => {
+            window.app.registerRefreshCallback('vyhledavani', () => vyhledavaniTab.refresh());
+        });
+    }
 });

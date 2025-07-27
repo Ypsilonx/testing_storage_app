@@ -354,7 +354,14 @@ class GitterboxModal {
         });
 
         document.getElementById('gb-regal').addEventListener('change', (e) => {
-            this.onShelfChange(e.target.value);
+            // Rozliš mezi vytváření a editací
+            if (this.mode === 'edit' && this.editingGbId) {
+                // Při editaci používej metodu, která umožňuje změnu pozice
+                this.onShelfChangeForEdit(e.target.value, this.currentPositionId);
+            } else {
+                // Při vytváření používej standardní metodu
+                this.onShelfChange(e.target.value);
+            }
         });
         
         // Validace GB čísla při psaní
@@ -455,9 +462,52 @@ class GitterboxModal {
         }
     }
 
+    async onShelfChangeForEdit(shelfId, currentPositionId = null) {
+        const poziceSelect = document.getElementById('gb-pozice');
+        
+        // Reset pozice
+        poziceSelect.innerHTML = '<option value="">Vyberte pozici...</option>';
+        
+        if (!shelfId) {
+            poziceSelect.disabled = true;
+            return;
+        }
+
+        try {
+            // Načti VŠECHNY pozice pro regál (i obsazené)
+            const response = await API.getShelfPositions(shelfId);
+            const positions = response.data.pozice;
+            
+            positions.forEach(pos => {
+                const option = document.createElement('option');
+                option.value = pos.id;
+                
+                // Zobraz jen aktuální a volné pozice
+                if (pos.id === currentPositionId) {
+                    // Aktuální pozice - vždy dostupná
+                    option.textContent = `Pozice ${pos.nazev} (aktuální)`;
+                    poziceSelect.appendChild(option);
+                } else if (!pos.gitterbox) {
+                    // Volná pozice - dostupná
+                    option.textContent = `Pozice ${pos.nazev}`;
+                    poziceSelect.appendChild(option);
+                }
+                // Obsazené pozice úplně vynecháme
+            });
+            
+            poziceSelect.disabled = false;
+            
+        } catch (error) {
+            console.error('Chyba při načítání pozic:', error);
+            poziceSelect.innerHTML = '<option value="">Chyba při načítání</option>';
+            poziceSelect.disabled = true;
+        }
+    }
+
     async openCreate(preselectedPositionId = null) {
         this.mode = 'create';
         this.editingGbId = null;
+        this.currentPositionId = null; // Vyčisti při vytváření
         
         document.getElementById('gb-modal-title').innerHTML = `
             <i class="fas fa-cube text-blue-500 mr-2"></i>
@@ -475,6 +525,7 @@ class GitterboxModal {
         // Obnov GB číslo input pro nový záznam
         const gbCisloInput = document.getElementById('gb-cislo');
         gbCisloInput.disabled = false;
+        gbCisloInput.setAttribute('required', 'required'); // Obnov required atribut
         gbCisloInput.classList.remove('bg-gray-100', 'text-gray-600');
         
         // Zobraz pásek s čísly a refresh button
@@ -543,6 +594,7 @@ class GitterboxModal {
     async openEdit(gb) {
         this.mode = 'edit';
         this.editingGbId = gb.id;
+        this.currentPositionId = gb.position_id; // Uloži aktuální pozici pro pozdější použití
         
         document.getElementById('gb-modal-title').innerHTML = `
             <i class="fas fa-edit text-orange-500 mr-2"></i>
@@ -563,6 +615,7 @@ class GitterboxModal {
         const gbCisloInput = document.getElementById('gb-cislo');
         gbCisloInput.value = gb.cislo_gb;
         gbCisloInput.disabled = true;
+        gbCisloInput.removeAttribute('required'); // Odstraň required pro disabled field
         gbCisloInput.classList.add('bg-gray-100', 'text-gray-600');
         
         // Skryj pásek s čísly při editaci
@@ -578,11 +631,18 @@ class GitterboxModal {
         
         // Nastav současnou pozici
         if (gb.position_id && gb.lokace && gb.regal) {
+            console.log('🔍 Předvybírám pozici pro editaci:', {
+                position_id: gb.position_id,
+                lokace: gb.lokace,
+                regal: gb.regal
+            });
+            
             // Najdi lokaci podle názvu
             const locationSelect = document.getElementById('gb-lokace');
             for (let option of locationSelect.options) {
                 if (option.text === gb.lokace) {
                     locationSelect.value = option.value;
+                    console.log('✅ Lokace nalezena:', option.text);
                     break;
                 }
             }
@@ -591,21 +651,24 @@ class GitterboxModal {
             if (locationSelect.value) {
                 await this.onLocationChange(locationSelect.value);
                 
-                // Najdi regál podle názvu
+                // Najdi regál podle názvu (hledej začátek textu)
                 const regalSelect = document.getElementById('gb-regal');
                 for (let option of regalSelect.options) {
-                    if (option.text === gb.regal) {
+                    // Porovnej jen název regálu, ignoruj rozměr v závorce
+                    if (option.text.startsWith(gb.regal)) {
                         regalSelect.value = option.value;
+                        console.log('✅ Regál nalezen:', option.text);
                         break;
                     }
                 }
                 
-                // Načti pozice pro vybraný regál
+                // Načti pozice pro vybraný regál - použij metodu pro editaci
                 if (regalSelect.value) {
-                    await this.onShelfChange(regalSelect.value);
+                    await this.onShelfChangeForEdit(regalSelect.value, gb.position_id);
                     
                     // Nastav současnou pozici
                     document.getElementById('gb-pozice').value = gb.position_id;
+                    console.log('✅ Pozice nastavena:', gb.position_id);
                 }
             }
         }
@@ -615,22 +678,29 @@ class GitterboxModal {
 
     async handleSubmit() {
         const formData = new FormData(document.getElementById('gitterbox-form'));
+        
+        // Při editaci, pokud je GB číslo disabled, vezmi ho z input value
+        const gbCisloInput = document.getElementById('gb-cislo');
+        const cisloGb = gbCisloInput.disabled ? 
+            parseInt(gbCisloInput.value) : 
+            parseInt(formData.get('cislo_gb'));
+            
         const data = {
-            cislo_gb: parseInt(formData.get('cislo_gb')),
+            cislo_gb: cisloGb,
             zodpovedna_osoba: formData.get('zodpovedna_osoba'),
             position_id: parseInt(formData.get('position_id')),
             naplnenost_procenta: parseInt(formData.get('naplnenost_procenta')) || 0,
             poznamka: formData.get('poznamka') || null
         };
 
-        // Validace
-        if (!data.cislo_gb || !data.zodpovedna_osoba || !data.position_id) {
-            this.modalManager.showError('Vyplňte všechna povinná pole včetně čísla GB');
+        // Validace - číslo GB je povinné jen při vytváření
+        if ((this.mode === 'create' && !data.cislo_gb) || !data.zodpovedna_osoba || !data.position_id) {
+            this.modalManager.showError('Vyplňte všechna povinná pole');
             return;
         }
 
-        // Validace rozsahu čísla GB
-        if (data.cislo_gb < 1) {
+        // Validace rozsahu čísla GB jen pokud není disabled
+        if (!gbCisloInput.disabled && data.cislo_gb < 1) {
             this.modalManager.showError('Číslo GB musí být alespoň 1');
             return;
         }
@@ -649,9 +719,17 @@ class GitterboxModal {
 
             this.modalManager.closeModal();
             
-            // Refresh zobrazení
-            if (window.regalyManager) {
-                window.regalyManager.loadData();
+            // Použijeme centralizovaný refresh systém
+            if (window.app && window.app.refreshData) {
+                window.app.refreshData();
+            } else {
+                // Fallback na přímé volání manažerů
+                if (window.regalyManager) {
+                    window.regalyManager.loadData();
+                }
+                if (window.vyhledavaniTab) {
+                    window.vyhledavaniTab.refresh();
+                }
             }
             
         } catch (error) {
@@ -1112,9 +1190,17 @@ class ItemModal {
 
             this.modalManager.closeModal();
             
-            // Refresh zobrazení
-            if (window.regalyManager) {
-                window.regalyManager.loadData();
+            // Použijeme centralizovaný refresh systém
+            if (window.app && window.app.refreshData) {
+                window.app.refreshData();
+            } else {
+                // Fallback na přímé volání manažerů
+                if (window.regalyManager) {
+                    window.regalyManager.loadData();
+                }
+                if (window.vyhledavaniTab) {
+                    window.vyhledavaniTab.refresh();
+                }
             }
             
         } catch (error) {

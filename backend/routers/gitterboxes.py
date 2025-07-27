@@ -270,10 +270,32 @@ def update_gitterbox(gb_id: int, update_data: GitterboxUpdate, db: Session = Dep
     if update_data.poznamka is not None:
         gb.poznamka = update_data.poznamka
     
+    # Přemístění GB na novou pozici
+    if update_data.position_id is not None and update_data.position_id != gb.position_id:
+        # Ověř, že nová pozice existuje a je volná
+        nova_pozice = db.query(Position).filter(Position.id == update_data.position_id).first()
+        if not nova_pozice:
+            raise HTTPException(status_code=400, detail="Nová pozice neexistuje")
+        
+        # Zkontroluj, že nová pozice je volná
+        existujici_gb = db.query(Gitterbox).filter(
+            Gitterbox.position_id == update_data.position_id,
+            Gitterbox.stav == "aktivni"
+        ).first()
+        if existujici_gb:
+            raise HTTPException(status_code=400, detail=f"Pozice je již obsazena Gitterboxem #{existujici_gb.cislo_gb}")
+        
+        # Uvolni současnou pozici
+        stara_pozice = db.query(Position).filter(Position.id == gb.position_id).first()
+        if stara_pozice:
+            stara_pozice.status = "volna"
+        
+        # Obsaď novou pozici
+        nova_pozice.status = "obsazena"
+        gb.position_id = update_data.position_id
+    
     db.commit()
     db.refresh(gb)
-    
-    print(f"✅ Gitterbox #{gb.cislo_gb} aktualizován")
     
     return get_gitterbox(gb.id, db)
 

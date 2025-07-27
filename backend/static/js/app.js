@@ -8,8 +8,50 @@ class SkladovaApp {
     constructor() {
         this.activeTab = 'regaly';
         this.isInitialized = false;
+        this.refreshCallbacks = {
+            regaly: [],
+            vyhledavani: []
+        };
         
         this.initializeApp();
+    }
+
+    /**
+     * Registrace callback funkce pro refreshování dat
+     */
+    registerRefreshCallback(tab, callback) {
+        if (this.refreshCallbacks[tab]) {
+            this.refreshCallbacks[tab].push(callback);
+        }
+    }
+
+    /**
+     * Spuštění refreshu pro aktivní tab nebo všechny taby
+     */
+    async refreshData(tabName = null) {
+        const tabsToRefresh = tabName ? [tabName] : [this.activeTab];
+        
+        for (const tab of tabsToRefresh) {
+            if (this.refreshCallbacks[tab]) {
+                console.log(`🔄 Refreshuji data pro tab: ${tab}`);
+                for (const callback of this.refreshCallbacks[tab]) {
+                    try {
+                        await callback();
+                    } catch (error) {
+                        console.error(`Chyba při refreshu ${tab}:`, error);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Globální refresh všech tabů
+     */
+    async refreshAllTabs() {
+        console.log('🔄 Refreshuji všechny taby');
+        await this.refreshData('regaly');
+        await this.refreshData('vyhledavani');
     }
 
     /**
