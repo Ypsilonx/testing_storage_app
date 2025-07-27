@@ -14,6 +14,7 @@ class RegalyTab {
         this.positions = [];
         this.gitterboxes = [];
         this.recentGb = []; // Naposledy zobrazené GB
+        this.allShelvesData = null; // Cache pro všechny regály
         
         this.initializeElements();
         this.attachEventListeners();
@@ -85,6 +86,18 @@ class RegalyTab {
         try {
             const response = await API.getLocations();
             this.locations = response.data;
+            
+            // Parsuj rozměry regálů (z "3x9" na radky=3, sloupce=9)
+            this.locations.forEach(location => {
+                if (location.regaly) {
+                    location.regaly.forEach(shelf => {
+                        const [radky, sloupce] = shelf.rozmer.split('x').map(Number);
+                        shelf.radky = radky;
+                        shelf.sloupce = sloupce;
+                    });
+                }
+            });
+            
             // Populace shelf selectoru a renderování se dělá v loadInitialData
         } catch (error) {
             console.error('Chyba při načítání lokací:', error);
@@ -153,19 +166,98 @@ class RegalyTab {
         this.selectedShelfId = shelfId;
         
         if (!shelfId || shelfId === 'all') {
-            this.renderAllShelves();
+            try {
+                showLoading();
+                await this.renderAllShelves();
+            } catch (error) {
+                showError('Chyba při načítání přehledu regálů: ' + error.message);
+            } finally {
+                hideLoading();
+            }
             return;
         }
 
         try {
             showLoading();
             await this.loadShelfPositions(shelfId);
-            this.renderShelfGrid();
+            this.renderSpecificShelf();
         } catch (error) {
             showError('Chyba při načítání pozic regálu: ' + error.message);
         } finally {
             hideLoading();
         }
+    }
+
+    /**
+     * Vykreslení konkrétního regálu v detailním zobrazení
+     */
+    renderSpecificShelf() {
+        if (!this.currentShelf || !this.positions) {
+            this.clearShelfGrid();
+            return;
+        }
+
+        const { radky, sloupce } = this.currentShelf;
+        
+        // Najdi lokaci pro breadcrumb
+        const location = this.locations.find(loc => 
+            loc.regaly && loc.regaly.some(shelf => shelf.id === this.currentShelf.id)
+        );
+        
+        // Vytvoření hlavičky s breadcrumb
+        const headerHtml = `
+            <div class="shelf-container bg-gray-700 rounded-lg p-6 border border-gray-500 mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h4 class="text-xl font-semibold text-gray-100 flex items-center">
+                        <i class="fas fa-map-marker-alt text-blue-400 mr-2"></i>
+                        ${escapeHtml(location ? location.nazev : 'Neznámá lokace')} → ${escapeHtml(this.currentShelf.nazev)}
+                    </h4>
+                    <span class="text-sm text-gray-300 bg-gray-600 px-3 py-1 rounded">
+                        ${radky}×${sloupce} pozic
+                    </span>
+                </div>
+                <div class="grid gap-3 p-4 bg-gray-800 rounded" 
+                     style="grid-template-columns: repeat(${sloupce}, minmax(0, 1fr));">
+                    ${this.generateDetailedShelfGrid()}
+                </div>
+            </div>
+        `;
+        
+        this.shelfGrid.innerHTML = headerHtml;
+    }
+
+    /**
+     * Generování detailní mřížky pro konkrétní regál
+     */
+    generateDetailedShelfGrid() {
+        const { radky, sloupce } = this.currentShelf;
+        let grid = '';
+        
+        // Skladové číslování: 1-1 vlevo dole, číslujeme zdola nahoru
+        for (let r = radky; r >= 1; r--) { // Změna: začínáme od nejvyššího řádku
+            for (let c = 1; c <= sloupce; c++) {
+                const position = this.positions.find(pos => pos.radek === r && pos.sloupec === c);
+                const gb = position ? position.gitterbox : null;
+                
+                const cellClass = gb ? 'gb-pozice-aktivni' : 'gb-pozice-volna';
+                
+                // Stylizované tooltipy - jako čistý text pro data-tooltip
+                const tooltip = gb ? 
+                    `GB #${gb.cislo_gb}\n👨‍🔧: ${gb.zodpovedna_osoba}\n📦: ${gb.pocet_polozek || 0}\n📊: ${gb.naplnenost_procenta}%${gb.ma_kriticke_expirace ? '\n⚠ Kritická expirace' : ''}` : 
+                    `Pozice ${position ? position.nazev : r+'-'+c}\nVolná pozice\nKlikněte pro nový GB`;
+                
+                grid += `
+                    <div class="position-cell has-tooltip ${cellClass} h-16 flex flex-col justify-center items-center cursor-pointer hover:scale-105 transition-transform" 
+                         data-custom-tooltip="${escapeHtml(tooltip)}"
+                         onclick="regalyTab.showPositionDetail(${position?.id || 'null'}, ${gb?.cislo_gb || 'null'})">
+                        <div class="text-sm font-bold">${gb ? gb.cislo_gb : '•'}</div>
+                        <div class="text-xs text-gray-400">${gb ? gb.naplnenost_procenta + '%' : 'Volná'}</div>
+                    </div>
+                `;
+            }
+        }
+        
+        return grid;
     }
 
     /**
@@ -175,121 +267,6 @@ class RegalyTab {
         const response = await API.getShelfPositions(shelfId);
         this.currentShelf = response.data.regal;
         this.positions = response.data.pozice;
-    }
-
-    /**
-     * Vykreslení regálové mřížky
-     */
-    renderShelfGrid() {
-        if (!this.currentShelf || !this.positions) {
-            this.clearShelfGrid();
-            return;
-        }
-
-        const { radky, sloupce } = this.currentShelf;
-        
-        // Vytvoření CSS grid
-        this.shelfGrid.style.gridTemplateColumns = `repeat(${sloupce}, 1fr)`;
-        this.shelfGrid.style.gridTemplateRows = `repeat(${radky}, 1fr)`;
-        this.shelfGrid.className = 'position-grid';
-        
-        // Vymazání obsahu
-        this.shelfGrid.innerHTML = '';
-
-        // Vytvoření pozic
-        for (let radek = 1; radek <= radky; radek++) {
-            for (let sloupec = 1; sloupec <= sloupce; sloupec++) {
-                const pozice = this.positions.find(p => p.radek === radek && p.sloupec === sloupec);
-                const cell = this.createPositionCell(pozice, radek, sloupec);
-                this.shelfGrid.appendChild(cell);
-            }
-        }
-    }
-
-    /**
-     * Vytvoření buňky pozice
-     */
-    createPositionCell(pozice, radek, sloupec) {
-        const cell = document.createElement('div');
-        cell.className = 'position-cell';
-        
-        if (pozice) {
-            // Pozice existuje
-            const statusClass = getPositionStatusClass(pozice);
-            cell.classList.add(statusClass);
-            
-            if (pozice.gitterbox) {
-                // Pozice má GB
-                cell.innerHTML = `
-                    <div class="text-center">
-                        <div class="font-bold">${pozice.gitterbox.cislo_gb}</div>
-                        <div class="text-xs">${pozice.gitterbox.naplnenost_procenta}%</div>
-                    </div>
-                `;
-                
-                // Šrafování pro neúplně naplněné GB
-                if (pozice.gitterbox.naplnenost_procenta < 80) {
-                    cell.classList.add('gb-pattern');
-                }
-                
-                // Tooltip
-                const tooltip = this.createPositionTooltip(pozice);
-                cell.appendChild(tooltip);
-                
-                // Klik handler
-                cell.addEventListener('click', () => {
-                    this.showGbDetail(pozice.gitterbox.cislo_gb);
-                });
-                
-            } else {
-                // Volná pozice
-                cell.innerHTML = `
-                    <div class="text-center text-gray-500">
-                        <div class="text-xs">${radek}-${sloupec}</div>
-                        <div class="text-xs">Volná</div>
-                    </div>
-                `;
-                
-                // Klik handler pro vytvoření nového GB
-                cell.addEventListener('click', () => {
-                    this.showNewGbModal(pozice.id);
-                });
-            }
-            
-        } else {
-            // Pozice neexistuje (např. díra v regálu)
-            cell.classList.add('bg-gray-300', 'border-gray-400');
-            cell.innerHTML = '<div class="text-gray-500 text-xs">-</div>';
-        }
-
-        return cell;
-    }
-
-    /**
-     * Vytvoření tooltipu pro pozici
-     */
-    createPositionTooltip(pozice) {
-        const tooltip = document.createElement('div');
-        tooltip.className = 'position-tooltip';
-        
-        if (pozice.gitterbox) {
-            const gb = pozice.gitterbox;
-            tooltip.innerHTML = `
-                <div><strong>GB #${gb.cislo_gb}</strong></div>
-                <div>Osoba: ${gb.zodpovedna_osoba}</div>
-                <div>Položky: ${gb.pocet_polozek}</div>
-                <div>Naplněnost: ${gb.naplnenost_procenta}%</div>
-                ${gb.ma_kriticke_expirace ? '<div class="text-red-300">⚠ Kritická expirace</div>' : ''}
-            `;
-        } else {
-            tooltip.innerHTML = `
-                <div><strong>Pozice ${pozice.nazev}</strong></div>
-                <div>Stav: ${pozice.status}</div>
-                <div>Klikněte pro nový GB</div>
-            `;
-        }
-        
-        return tooltip;
     }
 
     /**
@@ -372,28 +349,35 @@ class RegalyTab {
         const criticalEl = document.getElementById('stats-critical');
         const utilizationEl = document.getElementById('stats-utilization');
 
-        // Spočítej celkový počet pozic
+        // Spočítej celkový počet pozic z načtených lokací
         let totalPositions = 0;
-        this.locations.forEach(location => {
-            if (location.regaly) {
-                location.regaly.forEach(shelf => {
-                    totalPositions += shelf.radky * shelf.sloupce;
-                });
-            }
-        });
+        if (this.locations && this.locations.length > 0) {
+            this.locations.forEach(location => {
+                if (location.regaly && location.regaly.length > 0) {
+                    location.regaly.forEach(shelf => {
+                        if (shelf.celkem_pozic) {
+                            totalPositions += shelf.celkem_pozic;
+                        }
+                    });
+                }
+            });
+        }
 
         // Aktualizuj elementy
         if (totalGbEl) {
-            totalGbEl.textContent = `${this.gitterboxes.length}/${totalPositions}`;
+            const activeGb = this.gitterboxes ? this.gitterboxes.length : 0;
+            totalGbEl.textContent = `${activeGb}/${totalPositions}`;
         }
         
         if (criticalEl) {
-            const criticalCount = this.gitterboxes.filter(gb => gb.ma_kriticke_expirace).length;
+            const criticalCount = this.gitterboxes ? 
+                this.gitterboxes.filter(gb => gb.ma_kriticke_expirace).length : 0;
             criticalEl.textContent = criticalCount;
         }
         
         if (utilizationEl && totalPositions > 0) {
-            const utilization = Math.round((this.gitterboxes.length / totalPositions) * 100);
+            const activeGb = this.gitterboxes ? this.gitterboxes.length : 0;
+            const utilization = Math.round((activeGb / totalPositions) * 100);
             utilizationEl.textContent = `${utilization}%`;
         }
     }
@@ -401,10 +385,10 @@ class RegalyTab {
     /**
      * Zobrazení detailu pozice/GB
      */
-    showPositionDetail(poziceId, gbId) {
-        if (gbId) {
+    showPositionDetail(poziceId, gbCislo) {
+        if (gbCislo) {
             // Zobrazit detail GB a přidat do recent
-            const gb = this.gitterboxes.find(g => g.id === gbId);
+            const gb = this.gitterboxes.find(g => g.cislo_gb === gbCislo);
             if (gb) {
                 this.addToRecentGb(gb);
                 this.showGbDetail(gb.cislo_gb);
@@ -478,9 +462,11 @@ ${items.map(item => `- ${item.nazev_dilu} (${item.popis_mnozstvi})`).join('\n')}
             await this.loadGitterboxes();
             
             // Pokud máme vybraný regál, obnovíme pozice
-            if (this.shelfSelector.value) {
+            if (this.shelfSelector.value && this.shelfSelector.value !== 'all') {
                 await this.loadShelfPositions(this.shelfSelector.value);
-                this.renderShelfGrid();
+                this.renderSpecificShelf();
+            } else if (this.shelfSelector.value === 'all') {
+                await this.renderAllShelves();
             }
             
         } catch (error) {
@@ -529,28 +515,48 @@ ${items.map(item => `- ${item.nazev_dilu} (${item.popis_mnozstvi})`).join('\n')}
     async renderAllShelves() {
         if (!this.shelfGrid) return;
         
-        // Načti pozice pro všechny regály
-        let allPositions = [];
-        for (const location of this.locations) {
-            if (location.regaly) {
-                for (const shelf of location.regaly) {
-                    try {
-                        const response = await API.getShelfPositions(shelf.id);
-                        allPositions.push({
-                            shelf: shelf,
-                            location: location,
-                            positions: response.data.pozice || []
-                        });
-                    } catch (error) {
-                        console.warn(`Chyba při načítání pozic pro regál ${shelf.nazev}:`, error);
+        // Zobraz loading stav
+        this.shelfGrid.innerHTML = `
+            <div class="flex items-center justify-center py-8">
+                <div class="text-gray-400">
+                    <i class="fas fa-spinner fa-spin mr-2"></i>
+                    Načítání regálů...
+                </div>
+            </div>
+        `;
+        
+        // Načti pozice pro všechny regály pokud ještě nejsou načtené
+        if (!this.allShelvesData) {
+            this.allShelvesData = [];
+            
+            for (const location of this.locations) {
+                if (location.regaly) {
+                    for (const shelf of location.regaly) {
+                        try {
+                            const response = await API.getShelfPositions(shelf.id);
+                            this.allShelvesData.push({
+                                shelf: shelf,
+                                location: location,
+                                positions: response.data.pozice || []
+                            });
+                        } catch (error) {
+                            console.warn(`Chyba při načítání pozic pro regál ${shelf.nazev}:`, error);
+                            // Přidej prázdné pozice aby se regál zobrazil
+                            this.allShelvesData.push({
+                                shelf: shelf,
+                                location: location,
+                                positions: []
+                            });
+                        }
                     }
                 }
             }
         }
         
+        // Vykresli všechny regály
         this.shelfGrid.innerHTML = `
             <div class="space-y-8">
-                ${allPositions.map(item => `
+                ${this.allShelvesData.map(item => `
                     <div class="shelf-container bg-gray-700 rounded-lg p-6 border border-gray-500">
                         <div class="flex justify-between items-center mb-4">
                             <h4 class="text-xl font-semibold text-gray-100 flex items-center">
@@ -561,9 +567,11 @@ ${items.map(item => `- ${item.nazev_dilu} (${item.popis_mnozstvi})`).join('\n')}
                                 ${item.shelf.radky}×${item.shelf.sloupce} pozic
                             </span>
                         </div>
-                        <div class="grid gap-2 p-4 bg-gray-800 rounded" 
-                             style="grid-template-columns: repeat(${item.shelf.sloupce}, minmax(0, 1fr));">
-                            ${this.generateShelfGrid(item.shelf, item.positions)}
+                        <div class="flex justify-center">
+                            <div class="grid gap-2 p-4 bg-gray-800 rounded" 
+                                 style="grid-template-columns: repeat(${item.shelf.sloupce}, minmax(45px, 45px)); width: fit-content;">
+                                ${this.generateShelfGrid(item.shelf, item.positions)}
+                            </div>
                         </div>
                     </div>
                 `).join('')}
@@ -577,27 +585,28 @@ ${items.map(item => `- ${item.nazev_dilu} (${item.popis_mnozstvi})`).join('\n')}
     generateShelfGrid(shelf, positions) {
         let grid = '';
         
-        for (let r = 1; r <= shelf.radky; r++) {
+        // Skladové číslování: 1-1 vlevo dole, číslujeme zdola nahoru
+        for (let r = shelf.radky; r >= 1; r--) { // Změna: začínáme od nejvyššího řádku
             for (let c = 1; c <= shelf.sloupce; c++) {
                 // Najdi pozici na této souřadnici
                 const position = positions.find(pos => pos.radek === r && pos.sloupec === c);
-                // Najdi GB na této pozici
-                const gb = this.gitterboxes.find(gb => 
-                    gb.regal === shelf.nazev && gb.radek === r && gb.sloupec === c
-                );
+                
+                // GB informace jsou přímo v pozici
+                const gb = position ? position.gitterbox : null;
                 
                 const cellClass = gb ? 'gb-pozice-aktivni' : 'gb-pozice-volna';
-                const gbInfo = gb ? `GB #${gb.cislo_gb}` : 'Volná';
+                
+                // Stylizované tooltipy - jako čistý text pro title atribut
                 const tooltip = gb ? 
-                    `GB #${gb.cislo_gb}\\n${gb.zodpovedna_osoba}\\n${gb.naplnenost_procenta}% naplněno` : 
-                    `Pozice ${r}-${c}\\nVolná pozice`;
+                    `GB #${gb.cislo_gb}\n👨‍🔧: ${gb.zodpovedna_osoba}\n📦: ${gb.pocet_polozek || 0}\n📊: ${gb.naplnenost_procenta}%${gb.ma_kriticke_expirace ? '\n⚠ Kritická expirace' : ''}` : 
+                    `Pozice ${position ? position.nazev : r+'-'+c}\nVolná pozice\nKlikněte pro nový GB`;
                 
                 grid += `
-                    <div class="position-cell ${cellClass}" 
-                         title="${tooltip}"
-                         onclick="regalyTab.showPositionDetail(${position?.id || 'null'}, ${gb?.id || 'null'})">
+                    <div class="position-cell has-tooltip ${cellClass} h-12 flex flex-col justify-center items-center cursor-pointer hover:scale-105 transition-transform" 
+                         data-custom-tooltip="${escapeHtml(tooltip)}"
+                         onclick="regalyTab.showPositionDetail(${position?.id || 'null'}, ${gb?.cislo_gb || 'null'})">
                         <div class="text-xs font-bold">${gb ? gb.cislo_gb : '•'}</div>
-                        <div class="text-xs text-gray-400">${r}-${c}</div>
+                        <div class="text-xs text-gray-400">${gb ? gb.naplnenost_procenta + '%' : r+'-'+c}</div>
                     </div>
                 `;
             }
@@ -618,14 +627,17 @@ ${items.map(item => `- ${item.nazev_dilu} (${item.popis_mnozstvi})`).join('\n')}
      * Refresh všech dat
      */
     async refresh() {
+        // Vymaž cache
+        this.allShelvesData = null;
+        
         await this.loadInitialData();
         
         // Pokud máme vybraný regál, obnovíme i pozice
         if (this.shelfSelector.value && this.shelfSelector.value !== 'all') {
             await this.loadShelfPositions(this.shelfSelector.value);
-            this.renderShelfGrid();
+            this.renderSpecificShelf();
         } else {
-            this.renderAllShelves();
+            await this.renderAllShelves();
         }
     }
 }

@@ -111,6 +111,7 @@ body {
     border: 1px solid #404040;
 }
 
+/* Vlastní stylizované tooltipy použitím CSS */
 .position-cell {
     aspect-ratio: 1;
     border: 2px solid #4b5563 !important;
@@ -132,6 +133,53 @@ body {
 .position-cell:hover {
     transform: scale(1.05);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Vlastní tooltip - nahrazuje title tooltip systém */
+.position-cell.has-tooltip:hover::after {
+    content: attr(data-custom-tooltip);
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #1f2937;
+    color: #e0e0e0;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border: 1px solid #374151;
+    z-index: 1000;
+    white-space: pre-line;
+    min-width: max-content;
+    max-width: 250px;
+    font-family: 'Consolas', monospace;
+    line-height: 1.4;
+    pointer-events: none;
+    opacity: 1;
+    animation: tooltipFadeIn 0.2s ease;
+}
+
+.position-cell.has-tooltip:hover::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top: 6px solid #1f2937;
+    z-index: 1001;
+    pointer-events: none;
+}
+
+@keyframes tooltipFadeIn {
+    from { opacity: 0; transform: translateX(-50%) translateY(4px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* Skryj výchozí browser tooltip a přidej vlastní styling */
+.position-cell {
+    position: relative;
 }
 
 /* Nové světlejší barvy pro pozice */
@@ -159,7 +207,47 @@ body {
     color: #fcd34d !important; /* Velmi světlá oranžová */
 }
 
-/* Tooltip pro pozice - tmavý režim */
+/* Stylizované tooltipy pro pozice - tmavý režim */
+.tooltip-content {
+    background-color: #1f2937 !important;
+    color: #e0e0e0 !important;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border: 1px solid #374151;
+    max-width: 250px;
+    font-family: 'Consolas', monospace !important;
+}
+
+.tooltip-header {
+    font-weight: bold;
+    font-size: 14px;
+    color: #60a5fa !important;
+    margin-bottom: 6px;
+    border-bottom: 1px solid #374151;
+    padding-bottom: 4px;
+}
+
+.tooltip-item {
+    margin: 4px 0;
+    color: #d1d5db !important;
+}
+
+.tooltip-warning {
+    color: #fca5a5 !important;
+    font-weight: bold;
+    margin-top: 6px;
+}
+
+.tooltip-hint {
+    color: #9ca3af !important;
+    font-style: italic;
+    margin-top: 4px;
+    font-size: 12px;
+}
+
+/* Původní tooltip pro pozice - tmavý režim */
 .position-tooltip {
     position: absolute;
     bottom: 100%;

@@ -70,9 +70,8 @@ class Position(Base):
     
     @property
     def nazev_pozice(self):
-        """Lidsky čitelný název pozice (např. A2)"""
-        pismeno = chr(64 + self.radek)  # 1=A, 2=B, atd.
-        return f"{pismeno}{self.sloupec}"
+        """Lidsky čitelný název pozice podle warehouse standardu (řádek-sloupec)"""
+        return f"{self.radek}-{self.sloupec}"
     
     def __repr__(self):
         return f"<Position(pozice={self.nazev_pozice}, status='{self.status}')>"

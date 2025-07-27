@@ -23,12 +23,25 @@
   - JavaScript modulární architektura (api.js, regaly.js, vyhledavani.js, app.js)
   - **FIX**: Oprava JavaScript chyb (gb.pozice.* → gb.*)
   - API komunikace plně funkční
+- **Phase 3.2 KOMPLETNÍ** - Vizuální optimalizace a skladové standardy
+  - **KOMPLETNÍ**: Tmavý režim + Consolas font ✅
+  - **KOMPLETNÍ**: Dropdown výběr regálů s přehledem všech ✅
+  - **KOMPLETNÍ**: Jednotné velikosti tlačítek GB ✅
+  - **KOMPLETNÍ**: CSS stylizované tooltipy místo duplikovaných systémů ✅
+  - **KOMPLETNÍ**: Optimalizované zobrazení - při výběru regálu se ostatní schovají ✅
+  - **KOMPLETNÍ**: Lepší UX při přepínání mezi "všechny regály" a konkrétní regál ✅
+  - **KOMPLETNÍ**: Skladové číslování pozic - 1-1 vlevo dole (zdola nahoru) ✅
+  - **KOMPLETNÍ**: Responzivní šířka regálů - užší regály pro méně sloupců ✅
+  - **KOMPLETNÍ**: Konzistentní označování pozic - warehouse standard (řádek-sloupec) ✅
+  - **KOMPLETNÍ**: Oprava tooltip duplikace - jediný CSS tooltip systém ✅
 
 ### 🎯 AKTUÁLNĚ:
-- **Frontend běží bez chyb** - http://localhost:8000 
-- **3 testovací Gitterboxy** vytvořeny a funkční
-- **JavaScript chyby vyřešeny** - aplikace plně funkční
-- Připraveno k implementaci Phase 3.2 (Formuláře a validace)
+- **Phase 3.2 KOMPLETNÍ** - Všechny vizuální optimalizace dokončeny ✅
+- **Warehouse standardy aplikovány** - pozice 1-1 vlevo dole, konzistentní označování ✅
+- **CSS tooltip systém** - jediný funkční systém bez duplikace ✅
+- **Responzivní layout** - regály se přizpůsobují dle počtu sloupců ✅
+- **Server prostředí** - dokumentovaná sekvence spuštění ✅
+- **Připraveno k implementaci** Phase 3.3 (Pokročilé JavaScript funkce) nebo Phase 3.4 (CRUD formuláře)
 
 ---
 
@@ -37,8 +50,9 @@
 - [x] ✅ Globální číslování GB (1 až max pozic celého skladu) - API implementováno
 - [ ] 🔄 Dvoustupňové založení: GB → přidávání položek
 - [ ] 🔄 Flexibilní sledování expirací (lze vypnout)
-- [ ] 🔄 Vizualizace regálů s barevným kódováním
-- [ ] 🔄 Naplněnost GB v procentech + šrafování
+- [x] ✅ Skladové číslování pozic - warehouse standard (1-1 = spodní levá pozice)
+- [x] ✅ Konzistentní označování pozic - jednotný systém řádek-sloupec
+- [x] ✅ CSS tooltip systém - oprava duplikace, jediný funkční systém
 - [ ] 🔄 Dvě hlavní záložky: REGÁLY + VYHLEDÁVÁNÍ
 - [ ] 🔄 Fulltext vyhledávání se stromovou strukturou
 - [ ] 🔄 Export do PDF/Excel
@@ -80,12 +94,42 @@
 ### FÁZE 3: ZÁKLADNÍ FRONTEND (týden 3)
 - [x] 3.1 HTML struktura se dvěma záložkami ✅ (27.7.2025)
 - [x] 3.2 CSS styling s Tailwind ✅ (27.7.2025)
-  - **BONUS**: Tmavý režim + Consolas font
-  - Dropdown výběr regálů s přehledem všech
-  - Jednotné velikosti tlačítek GB
-- [ ] 3.3 JavaScript pro interaktivitu
+  - **BONUS**: Tmavý režim + Consolas font ✅
+  - Dropdown výběr regálů s přehledem všech ✅
+  - Jednotné velikosti tlačítek GB ✅
+  - CSS tooltips bez duplikace ✅
+  - Optimalizované zobrazení při výběru regálu ✅
+  - Warehouse standardy pozic ✅
+  - Konzistentní označování pozic ✅
+- [ ] 3.3 JavaScript pro pokročilé interaktivity
 - [ ] 3.4 Základní formuláře (nový GB, přidání položky)
-- [ ] 3.5 Propojení s API
+- [ ] 3.5 Propojení s API pro CRUD operace
+
+## 🔧 TECHNICKÉ ŘEŠENÍ PROSTŘEDÍ
+
+### Python Virtual Environment:
+- **Lokace**: `d:\61_Programing\Optimalizace_prace\testing_storage_app\.venv\`
+- **Aktivace**: `.\.venv\Scripts\Activate.ps1` (PowerShell)
+- **Python Path**: `D:/61_Programing/Optimalizace_prace/testing_storage_app/.venv/Scripts/python.exe`
+- **Nainstalované balíčky**: fastapi, uvicorn, sqlalchemy, python-dotenv, flask, pyqt6
+
+### Spuštění aplikace:
+```powershell
+# 1. Přejít do root adresáře projektu
+cd "d:\61_Programing\Optimalizace_prace\testing_storage_app"
+
+# 2. Aktivovat virtuální prostředí
+.\.venv\Scripts\Activate.ps1
+
+# 3. Přejít do backend adresáře a spustit server
+cd backend
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+### Dev server: 
+- **URL**: http://localhost:8000
+- **API Docs**: http://localhost:8000/api/docs
+- **Reload**: Automatický při změnách
 
 ### FÁZE 4: VIZUALIZACE REGÁLŮ (týden 4)
 - [ ] 4.1 Generování regálových mřížek
