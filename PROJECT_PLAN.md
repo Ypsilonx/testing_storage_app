@@ -17,11 +17,18 @@
   - Automatické přiřazování pozic 1-115
   - Relace s lokacemi/regály/pozicemi fungují
   - API testováno a funkční
+- **Phase 3.1 KOMPLETNÍ** - Frontend základy s opravami
+  - HTML struktura s dvěma záložkami (Regály + Vyhledávání)
+  - Tailwind CSS styling a responsive design
+  - JavaScript modulární architektura (api.js, regaly.js, vyhledavani.js, app.js)
+  - **FIX**: Oprava JavaScript chyb (gb.pozice.* → gb.*)
+  - API komunikace plně funkční
 
-### 🔄 AKTUÁLNĚ:
-- **Phase 3.1 KOMPLETNÍ** - HTML struktura s dvěma záložkami (Regály + Vyhledávání)
-- **Frontend běží** - http://localhost:8000 s plně funkčním rozhraním
-- Připraveno k implementaci Phase 3.2-3.5 (styling, interaktivita, formuláře)
+### 🎯 AKTUÁLNĚ:
+- **Frontend běží bez chyb** - http://localhost:8000 
+- **3 testovací Gitterboxy** vytvořeny a funkční
+- **JavaScript chyby vyřešeny** - aplikace plně funkční
+- Připraveno k implementaci Phase 3.2 (Formuláře a validace)
 
 ---
 
