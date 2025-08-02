@@ -457,12 +457,12 @@ async function loadInitialStatistics() {
             const criticalEl = document.getElementById('stats-critical');
             const utilizationEl = document.getElementById('stats-utilization');
             
-            if (totalGbEl) totalGbEl.textContent = response.data.aktivni_gb;
+            if (totalGbEl) totalGbEl.textContent = `${response.data.aktivni_gb}/${response.data.max_cislo_gb}`;
             if (totalItemsEl) totalItemsEl.textContent = response.data.celkem_polozek;
             if (criticalEl) criticalEl.textContent = response.data.kriticke_gb;
             if (utilizationEl) utilizationEl.textContent = response.data.obsazenost_skladu_procenta + '%';
             
-            console.log(`✅ Statistiky načteny: ${response.data.aktivni_gb} GB, ${response.data.celkem_polozek} položek`);
+            console.log(`✅ Statistiky načteny: ${response.data.aktivni_gb}/${response.data.max_cislo_gb} GB, ${response.data.celkem_polozek} položek`);
         }
     } catch (error) {
         console.error('❌ Chyba při načítání statistik:', error);

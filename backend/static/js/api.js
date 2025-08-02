@@ -84,6 +84,16 @@ class ApiClient {
             method: 'DELETE',
         });
     }
+
+    /**
+     * DELETE request s tělem
+     */
+    static async deleteWithBody(endpoint, data) {
+        return this.request(`${API_BASE_URL}${endpoint}`, {
+            method: 'DELETE',
+            body: JSON.stringify(data),
+        });
+    }
 }
 
 // API metody pro konkrétní endpointy
@@ -284,6 +294,49 @@ const API = {
      */
     async healthCheck() {
         return ApiClient.get('/health');
+    },
+
+    // === ARCHIVACE A VYSKLADNĚNÍ ===
+    
+    /**
+     * Získání důvodů vyskladnění
+     */
+    async getVyskladneniDuvody() {
+        return ApiClient.get('/archive/duvody');
+    },
+
+    /**
+     * Vyskladnění jednotlivé položky
+     */
+    async archiveItem(itemId, duvod, poznamka = '') {
+        return ApiClient.deleteWithBody(`/archive/items/${itemId}`, {
+            duvod: duvod,
+            poznamka: poznamka
+        });
+    },
+
+    /**
+     * Vyskladnění celého Gitterboxu
+     */
+    async archiveGitterbox(gbId, duvod, poznamka = '') {
+        return ApiClient.deleteWithBody(`/archive/gitterboxes/${gbId}`, {
+            duvod: duvod,
+            poznamka: poznamka
+        });
+    },
+
+    /**
+     * Statistiky archivních dat
+     */
+    async getArchiveStats() {
+        return ApiClient.get('/archive/stats');
+    },
+
+    /**
+     * Download Excel archivu
+     */
+    getArchiveDownloadUrl() {
+        return `${API_BASE_URL}/archive/export`;
     }
 };
 

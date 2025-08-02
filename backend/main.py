@@ -14,7 +14,7 @@ from pathlib import Path
 
 from database import get_database, init_database, get_storage_statistics
 from models import Location, Shelf, Position, Gitterbox, Item
-from routers import gitterboxes, items, positions
+from routers import gitterboxes, items, positions, archive
 
 # Vytvoření FastAPI aplikace
 app = FastAPI(
@@ -49,6 +49,9 @@ app.include_router(items.router)
 
 # Přidání routeru pro pozice
 app.include_router(positions.router)
+
+# Přidání routeru pro archivaci a vyskladnění
+app.include_router(archive.router)
 
 
 @app.on_event("startup")
@@ -196,12 +199,16 @@ async def get_shelf_positions(shelf_id: int, db: Session = Depends(get_database)
             if pozice.gitterbox:
                 gb = pozice.gitterbox
                 pozice_data["gitterbox"] = {
+                    "id": gb.id,  # ✅ OPRAVENO: Přidáno chybějící ID
                     "cislo_gb": gb.cislo_gb,
                     "zodpovedna_osoba": gb.zodpovedna_osoba,
+                    "datum_zalozeni": gb.datum_zalozeni.isoformat() if gb.datum_zalozeni else None,
                     "pocet_polozek": gb.pocet_polozek,
                     "naplnenost_procenta": gb.naplnenost_procenta,
                     "barva_indikace": gb.barva_indikace,
-                    "ma_kriticke_expirace": gb.ma_kriticke_expirace
+                    "ma_kriticke_expirace": gb.ma_kriticke_expirace,
+                    "stav": gb.stav,
+                    "poznamka": gb.poznamka
                 }
             
             result["pozice"].append(pozice_data)

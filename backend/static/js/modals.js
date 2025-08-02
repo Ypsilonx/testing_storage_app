@@ -711,10 +711,12 @@ class GitterboxModal {
             let result;
             if (this.mode === 'create') {
                 result = await API.createGitterbox(data);
-                this.modalManager.showSuccess(`Gitterbox #${result.cislo_gb} byl úspěšně vytvořen`);
+                const gbNumber = result.data?.cislo_gb || result.cislo_gb || data.cislo_gb;
+                this.modalManager.showSuccess(`Gitterbox #${gbNumber} byl úspěšně vytvořen`);
             } else {
                 result = await API.updateGitterbox(this.editingGbId, data);
-                this.modalManager.showSuccess(`Gitterbox #${result.cislo_gb} byl úspěšně aktualizován`);
+                const gbNumber = result.data?.cislo_gb || result.cislo_gb || data.cislo_gb;
+                this.modalManager.showSuccess(`Gitterbox #${gbNumber} byl úspěšně aktualizován`);
             }
 
             this.modalManager.closeModal();
@@ -1182,10 +1184,12 @@ class ItemModal {
             let result;
             if (this.mode === 'create') {
                 result = await API.createItem(data);
-                this.modalManager.showSuccess(`Položka "${result.nazev_dilu}" byla úspěšně přidána`);
+                const itemName = result.data?.nazev_dilu || result.nazev_dilu || data.nazev_dilu;
+                this.modalManager.showSuccess(`Položka "${itemName}" byla úspěšně přidána`);
             } else {
                 result = await API.updateItem(this.editingItemId, data);
-                this.modalManager.showSuccess(`Položka "${result.nazev_dilu}" byla úspěšně aktualizována`);
+                const itemName = result.data?.nazev_dilu || result.nazev_dilu || data.nazev_dilu;
+                this.modalManager.showSuccess(`Položka "${itemName}" byla úspěšně aktualizována`);
             }
 
             this.modalManager.closeModal();
@@ -1212,9 +1216,210 @@ class ItemModal {
     }
 }
 
+/**
+ * Modal pro vyskladnění (archivaci) položek a Gitterboxů
+ */
+class ArchiveModal {
+    constructor() {
+        this.modalManager = window.modalManager;
+        this.itemId = null;
+        this.gitterboxId = null;
+        this.mode = null; // 'item' nebo 'gitterbox'
+        this.availableReasons = {};
+        this.bindEvents();
+        this.loadReasons();
+    }
+
+    async loadReasons() {
+        try {
+            const response = await API.getVyskladneniDuvody();
+            if (response.status === 'success') {
+                this.availableReasons = response.data;
+            }
+        } catch (error) {
+            console.error('Chyba při načítání důvodů:', error);
+        }
+    }
+
+    bindEvents() {
+        document.addEventListener('DOMContentLoaded', () => {
+            this.createArchiveModal();
+            
+            // Submit handler
+            const form = document.getElementById('archive-form');
+            if (form) {
+                form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.handleSubmit();
+                });
+            }
+        });
+    }
+
+    createArchiveModal() {
+        const modalHtml = `
+            <div id="archive-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+                <div class="modal-content bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+                    <div class="modal-header px-6 py-4 border-b border-gray-200">
+                        <h3 id="archive-modal-title" class="text-lg font-semibold text-gray-900">
+                            <i class="fas fa-archive text-red-500 mr-2"></i>
+                            Vyskladnit položku
+                        </h3>
+                        <button type="button" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600" onclick="modalManager.closeModal()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <form id="archive-form" class="modal-body">
+                        <div class="px-6 py-4 space-y-4">
+                            <div>
+                                <label for="archive-duvod" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Důvod vyskladnění <span class="text-red-500">*</span>
+                                </label>
+                                <select id="archive-duvod" name="duvod" required 
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="">-- Vyberte důvod --</option>
+                                    <option value="expirace">📅 Expirace</option>
+                                    <option value="rozbito">💥 Rozbito/Poškozeno</option>
+                                    <option value="chyba">❌ Chyba/Špatně zaskladněno</option>
+                                    <option value="jine">📝 Jiné</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label for="archive-poznamka" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Poznámka (volitelné)
+                                </label>
+                                <textarea id="archive-poznamka" name="poznamka" rows="3" 
+                                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                          placeholder="Další podrobnosti o vyskladnění..."></textarea>
+                            </div>
+                            
+                            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                                <div class="flex">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm text-yellow-700">
+                                            <strong>Pozor:</strong> Vyskladnění trvale odstraní data z databáze.
+                                            Informace budou archivovány do Excel souboru.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="modal-footer px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+                            <button type="button" onclick="modalManager.closeModal()" 
+                                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500">
+                                <i class="fas fa-times mr-2"></i>
+                                Zrušit
+                            </button>
+                            <button type="submit" id="archive-submit-btn"
+                                    class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500">
+                                <i class="fas fa-archive mr-2"></i>
+                                Vyskladnit
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('modals-container').insertAdjacentHTML('beforeend', modalHtml);
+    }
+
+    openForItem(itemId, itemName) {
+        this.mode = 'item';
+        this.itemId = itemId;
+        this.gitterboxId = null;
+        
+        document.getElementById('archive-modal-title').innerHTML = `
+            <i class="fas fa-archive text-red-500 mr-2"></i>
+            Vyskladnit položku: ${itemName}
+        `;
+        
+        // Reset form
+        document.getElementById('archive-form').reset();
+        
+        this.modalManager.openModal('archive-modal');
+    }
+
+    openForGitterbox(gitterboxId, gbNumber) {
+        this.mode = 'gitterbox';
+        this.gitterboxId = gitterboxId;
+        this.itemId = null;
+        
+        document.getElementById('archive-modal-title').innerHTML = `
+            <i class="fas fa-archive text-red-500 mr-2"></i>
+            Vyskladnit celý Gitterbox #${gbNumber}
+        `;
+        
+        // Reset form
+        document.getElementById('archive-form').reset();
+        
+        this.modalManager.openModal('archive-modal');
+    }
+
+    async handleSubmit() {
+        const duvod = document.getElementById('archive-duvod').value;
+        const poznamka = document.getElementById('archive-poznamka').value;
+        
+        if (!duvod) {
+            this.modalManager.showError('Vyberte důvod vyskladnění');
+            return;
+        }
+        
+        const originalText = document.getElementById('archive-submit-btn').innerHTML;
+        this.modalManager.showLoading('archive-submit-btn');
+        
+        try {
+            let response;
+            
+            if (this.mode === 'item') {
+                response = await API.archiveItem(this.itemId, duvod, poznamka);
+            } else if (this.mode === 'gitterbox') {
+                response = await API.archiveGitterbox(this.gitterboxId, duvod, poznamka);
+            }
+            
+            if (response.status === 'success') {
+                this.modalManager.showSuccess(
+                    this.mode === 'item' 
+                        ? 'Položka byla úspěšně vyskladněna a archivována'
+                        : 'Gitterbox byl úspěšně vyskladněn a archivován'
+                );
+                
+                this.modalManager.closeModal();
+                
+                // Refresh všech záložek
+                if (window.app && window.app.refreshAllTabs) {
+                    window.app.refreshAllTabs();
+                } else {
+                    // Fallback na přímé volání manažerů
+                    if (window.regalyManager && window.regalyManager.refresh) {
+                        window.regalyManager.refresh();
+                    }
+                    if (window.vyhledavaniTab && window.vyhledavaniTab.refresh) {
+                        window.vyhledavaniTab.refresh();
+                    }
+                }
+            }
+            
+        } catch (error) {
+            console.error('Chyba při vyskladnění:', error);
+            this.modalManager.showError('Nepodařilo se vyskladnit: ' + error.message);
+        } finally {
+            this.modalManager.hideLoading('archive-submit-btn', originalText);
+        }
+    }
+}
+
 // Global instances
 window.modalManager = new ModalManager();
+window.archiveModal = new ArchiveModal();
 
 // Export tříd pro použití v app.js
 window.GitterboxModal = GitterboxModal;
 window.ItemModal = ItemModal;
+window.ArchiveModal = ArchiveModal;

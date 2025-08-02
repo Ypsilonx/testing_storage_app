@@ -59,6 +59,19 @@ class RegalyTab {
         this.quickSearchBtn.addEventListener('click', () => {
             this.switchToSearchTab();
         });
+
+        // Event delegation pro position cells
+        this.shelfGrid.addEventListener('click', (e) => {
+            const positionCell = e.target.closest('.position-cell');
+            if (positionCell) {
+                const positionId = positionCell.getAttribute('data-position-id');
+                const gbCislo = positionCell.getAttribute('data-gb-cislo');
+                this.showPositionDetail(
+                    positionId === 'null' ? null : parseInt(positionId),
+                    gbCislo === 'null' ? null : gbCislo
+                );
+            }
+        });
     }
 
     /**
@@ -229,7 +242,8 @@ class RegalyTab {
                 grid += `
                     <div class="position-cell has-tooltip ${cellClass} h-16 flex flex-col justify-center items-center cursor-pointer hover:scale-105 transition-transform" 
                          data-custom-tooltip="${escapeHtml(tooltip)}"
-                         onclick="regalyTab.showPositionDetail(${position?.id || 'null'}, ${gb?.cislo_gb || 'null'})">
+                         data-position-id="${position?.id || 'null'}" 
+                         data-gb-cislo="${gb?.cislo_gb || 'null'}">
                         <div class="text-sm font-bold">${gb ? gb.cislo_gb : '•'}</div>
                         <div class="text-xs text-gray-400">${gb ? gb.naplnenost_procenta + '%' : 'Volná'}</div>
                     </div>
@@ -247,13 +261,65 @@ class RegalyTab {
         const response = await API.getShelfPositions(shelfId);
         this.currentShelf = response.data.regal;
         this.positions = response.data.pozice;
+        
+        console.log(`📦 loadShelfPositions pro regál ${shelfId}: nalezeno ${this.positions.length} pozic`);
+        
+        // Extrahuj GB data z pozic pro tento regál
+        this.positions.forEach(pozice => {
+            if (pozice.gitterbox) {
+                console.log(`🔍 Parsuju GB ze pozice ${pozice.id}:`, pozice.gitterbox);
+                
+                // Ujisti se, že máme správný GB objekt s ID
+                if (!pozice.gitterbox.id) {
+                    console.error(`❌ GB objekt nemá ID:`, pozice.gitterbox);
+                    return; // Přeskoč tento GB
+                }
+                
+                // Zkontroluj, jestli už GB není v cache
+                const existingGb = this.gitterboxes.find(gb => gb.cislo_gb === pozice.gitterbox.cislo_gb);
+                if (!existingGb) {
+                    const gbData = {
+                        ...pozice.gitterbox,
+                        position_id: pozice.id,
+                        // Přidáme informace o pozici pro breadcrumb
+                        lokace: this.currentLocation?.nazev || 'N/A',
+                        regal: this.currentShelf?.nazev || 'N/A', 
+                        radek: pozice.radek || 'N/A',
+                        sloupec: pozice.sloupec || 'N/A'
+                    };
+                    
+                    console.log(`🔎 GB objekt po zpracování:`, gbData);
+                    this.gitterboxes.push(gbData);
+                    console.log(`✅ Přidán GB ${gbData.cislo_gb} (ID: ${gbData.id}) do cache`);
+                } else {
+                    console.log(`⚠️  GB ${pozice.gitterbox.cislo_gb} už je v cache`);
+                }
+            }
+        });
+        
+        console.log(`📊 Po loadShelfPositions mám ${this.gitterboxes.length} GB v cache`);
+        
+        // Aktualizuj boční panel s kritickými expiracemi po načtení GB dat
+        this.updateCriticalList();
     }
 
     /**
      * Aktualizace seznamu kritických expirací
      */
     updateCriticalList() {
-        const criticalGb = this.gitterboxes.filter(gb => gb.ma_kriticke_expirace);
+        console.log(`🔍 Hledám kritické GB v ${this.gitterboxes.length} gitterboxech`);
+        console.log('🔎 Všechna GB data:', this.gitterboxes);
+        
+        const criticalGb = this.gitterboxes.filter(gb => {
+            console.log(`🔍 GB ${gb.cislo_gb} - ma_kriticke_expirace:`, gb.ma_kriticke_expirace);
+            return gb.ma_kriticke_expirace;
+        });
+        console.log(`⚠️  Nalezeno ${criticalGb.length} kritických GB:`, criticalGb);
+        
+        if (!this.criticalList) {
+            console.error('❌ Element critical-list nebyl nalezen!');
+            return;
+        }
         
         if (criticalGb.length === 0) {
             this.criticalList.innerHTML = `
@@ -266,8 +332,8 @@ class RegalyTab {
         }
 
         this.criticalList.innerHTML = criticalGb.map(gb => `
-            <div class="flex items-center justify-between p-2 bg-red-50 border border-red-200 rounded cursor-pointer hover:bg-red-100" 
-                 onclick="regalyTab.showGbDetail(${gb.cislo_gb})">
+            <div class="critical-gb-item flex items-center justify-between p-2 bg-red-50 border border-red-200 rounded cursor-pointer hover:bg-red-100" 
+                 data-gb-cislo="${gb.cislo_gb}">
                 <div>
                     <div class="font-medium text-red-800">GB #${gb.cislo_gb}</div>
                     <div class="text-xs text-red-600">${gb.zodpovedna_osoba}</div>
@@ -275,6 +341,14 @@ class RegalyTab {
                 <i class="fas fa-exclamation-triangle text-red-500"></i>
             </div>
         `).join('');
+
+        // Přidej event listeners pro kritické GB
+        this.criticalList.querySelectorAll('.critical-gb-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                const gbCislo = parseInt(e.currentTarget.dataset.gbCislo);
+                this.showGbDetail(gbCislo);
+            });
+        });
     }
 
     /**
@@ -294,8 +368,8 @@ class RegalyTab {
 
         // Zobrazit posledních 5 GB
         this.recentGbList.innerHTML = this.recentGb.slice(0, 5).map(gb => `
-            <div class="flex items-center justify-between text-sm p-2 bg-gray-50 rounded cursor-pointer hover:bg-gray-100" 
-                 onclick="regalyTab.showGbDetail(${gb.cislo_gb})">
+            <div class="recent-gb-item flex items-center justify-between text-sm p-2 bg-gray-50 rounded cursor-pointer hover:bg-gray-100" 
+                 data-gb-cislo="${gb.cislo_gb}">
                 <div>
                     <span class="font-medium">GB #${gb.cislo_gb}</span>
                     <div class="text-xs text-gray-500">${escapeHtml(gb.zodpovedna_osoba)}</div>
@@ -305,6 +379,14 @@ class RegalyTab {
                 </div>
             </div>
         `).join('');
+
+        // Přidej event listeners pro recent GB
+        this.recentGbList.querySelectorAll('.recent-gb-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                const gbCislo = parseInt(e.currentTarget.dataset.gbCislo);
+                this.showGbDetail(gbCislo);
+            });
+        });
     }
 
     /**
@@ -325,16 +407,36 @@ class RegalyTab {
      * Zobrazení detailu pozice/GB
      */
     showPositionDetail(poziceId, gbCislo) {
+        console.log(`🖱️  Klik na pozici: poziceId=${poziceId}, gbCislo=${gbCislo}`);
+        console.log(`📋 Aktuálně v cache ${this.gitterboxes.length} GB:`);
+        console.log(this.gitterboxes.map(gb => `${gb.cislo_gb} (typ: ${typeof gb.cislo_gb})`));
+        
         if (gbCislo) {
-            // Zobrazit detail GB a přidat do recent
-            const gb = this.gitterboxes.find(g => g.cislo_gb === gbCislo);
+            // Konverze na číslo pro srovnání
+            const gbCisloNum = parseInt(gbCislo);
+            console.log(`🔍 Hledám GB ${gbCislo} (jako číslo ${gbCisloNum}) v ${this.gitterboxes.length} gitterboxech`);
+            
+            // Nejdříve zkusíme přesnou shodu
+            let gb = this.gitterboxes.find(g => g.cislo_gb === gbCislo);
+            
+            // Pokud nenalezeno, zkusíme numerické srovnání
+            if (!gb) {
+                gb = this.gitterboxes.find(g => parseInt(g.cislo_gb) === gbCisloNum);
+                console.log(`🔄 Zkouším numerické srovnání: ${gb ? 'nalezeno' : 'nenalezeno'}`);
+            }
+            
             if (gb) {
+                console.log(`✅ GB ${gbCislo} nalezen, zobrazuji detail`);
                 this.addToRecentGb(gb);
                 this.showGbDetail(gb.cislo_gb);
+            } else {
+                console.warn(`❌ GB ${gbCislo} nebyl nalezen v cache`);
+                console.warn(`🔍 Dostupné GB čísla:`, this.gitterboxes.map(g => g.cislo_gb));
             }
         } else {
             // Zobrazit možnost vytvoření nového GB na této pozici
             if (poziceId) {
+                console.log(`➕ Nový GB na pozici ${poziceId}`);
                 this.showNewGbModal(poziceId);
             }
         }
@@ -352,6 +454,15 @@ class RegalyTab {
                 return;
             }
 
+            console.log(`🔍 showGbDetail: GB objekt nalezen:`, gb);
+            console.log(`🔍 showGbDetail: GB ID je:`, gb.id, typeof gb.id);
+
+            if (!gb.id || gb.id === undefined) {
+                console.error(`❌ GB ${gb.cislo_gb} nemá platné ID!`, gb);
+                showError(`Gitterbox #${gb.cislo_gb} nemá platné ID`);
+                return;
+            }
+
             const itemsResponse = await API.getGitterboxItems(gb.id);
             const items = itemsResponse.data.polozky;
             
@@ -359,6 +470,7 @@ class RegalyTab {
             this.createGbDetailModal(gb, items);
             
         } catch (error) {
+            console.error('❌ Chyba v showGbDetail:', error);
             showError('Chyba při načítání detailu GB: ' + error.message);
         } finally {
             hideLoading();
@@ -431,6 +543,10 @@ class RegalyTab {
                             <i class="fas fa-plus mr-2"></i>
                             Přidat položku
                         </button>
+                        <button id="archive-gb-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors">
+                            <i class="fas fa-archive mr-2"></i>
+                            Vyskladnit GB
+                        </button>
                         <button id="copy-gb-info-btn" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors">
                             <i class="fas fa-copy mr-2"></i>
                             Kopírovat info
@@ -465,9 +581,14 @@ class RegalyTab {
                                                 </div>
                                             ` : ''}
                                         </div>
-                                        <button class="edit-item-btn text-gray-400 hover:text-orange-600 ml-2" data-item-id="${item.id}">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
+                                        <div class="flex space-x-1">
+                                            <button class="edit-item-btn text-gray-400 hover:text-orange-600" data-item-id="${item.id}">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="archive-item-btn text-gray-400 hover:text-red-600" data-item-id="${item.id}" data-item-name="${item.nazev_dilu}">
+                                                <i class="fas fa-archive"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             `).join('')}
@@ -522,6 +643,7 @@ class RegalyTab {
         // Add item buttons
         const addItemBtn = document.getElementById('add-item-btn');
         const addFirstItemBtn = document.getElementById('add-first-item-btn');
+        const archiveGbBtn = document.getElementById('archive-gb-btn');
         
         if (addItemBtn) {
             addItemBtn.addEventListener('click', () => {
@@ -537,6 +659,15 @@ class RegalyTab {
             });
         }
 
+        if (archiveGbBtn) {
+            archiveGbBtn.addEventListener('click', () => {
+                closeModal();
+                if (window.archiveModal) {
+                    window.archiveModal.openForGitterbox(gb.id, gb.cislo_gb);
+                }
+            });
+        }
+
         // Edit item buttons
         document.querySelectorAll('.edit-item-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -545,6 +676,19 @@ class RegalyTab {
                 if (item) {
                     closeModal();
                     this.showEditItemModal(item);
+                }
+            });
+        });
+
+        // Archive item buttons
+        document.querySelectorAll('.archive-item-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const itemId = parseInt(e.currentTarget.dataset.itemId);
+                const itemName = e.currentTarget.dataset.itemName;
+                closeModal();
+                if (window.archiveModal) {
+                    window.archiveModal.openForItem(itemId, itemName);
                 }
             });
         });
@@ -694,6 +838,7 @@ class RegalyTab {
         // Načti pozice pro všechny regály pokud ještě nejsou načtené
         if (!this.allShelvesData) {
             this.allShelvesData = [];
+            this.gitterboxes = []; // Vynuluj GB cache
             
             for (const location of this.locations) {
                 if (location.regaly) {
@@ -704,11 +849,51 @@ class RegalyTab {
                             if (!this.allShelvesData) {
                                 this.allShelvesData = [];
                             }
+                            
+                            const positions = response.data.pozice || [];
                             this.allShelvesData.push({
                                 shelf: shelf,
                                 location: location,
-                                positions: response.data.pozice || []
+                                positions: positions
                             });
+                            
+                            // Extrahuj GB data z pozic
+                            positions.forEach(pozice => {
+                                if (pozice.gitterbox) {
+                                    console.log(`🔍 renderAllShelves parsuje GB ze pozice ${pozice.id}:`, pozice.gitterbox);
+                                    
+                                    // Ujisti se, že máme správný GB objekt s ID
+                                    if (!pozice.gitterbox.id) {
+                                        console.error(`❌ GB objekt nemá ID:`, pozice.gitterbox);
+                                        return; // Přeskoč tento GB
+                                    }
+                                    
+                                    // Přidej pozici_id ke GB pro lepší propojení
+                                    const gbData = {
+                                        ...pozice.gitterbox,
+                                        position_id: pozice.id,
+                                        // Přidáme informace o pozici pro breadcrumb
+                                        lokace: location.nazev || 'N/A',
+                                        regal: shelf.nazev || 'N/A',
+                                        radek: pozice.radek || 'N/A',
+                                        sloupec: pozice.sloupec || 'N/A'
+                                    };
+                                    
+                                    console.log(`🔎 GB objekt po zpracování:`, gbData);
+                                    
+                                    // Zkontroluj duplicity
+                                    const existingGb = this.gitterboxes.find(gb => gb.cislo_gb === gbData.cislo_gb);
+                                    if (!existingGb) {
+                                        this.gitterboxes.push(gbData);
+                                        console.log(`✅ renderAllShelves přidal GB ${gbData.cislo_gb} (ID: ${gbData.id}) do cache`);
+                                    } else {
+                                        console.log(`⚠️  renderAllShelves: GB ${gbData.cislo_gb} už je v cache`);
+                                    }
+                                }
+                            });
+                            
+                            console.log(`📦 Načteno ${positions.filter(p => p.gitterbox).length} GB z regálu ${shelf.nazev}`);
+                            
                         } catch (error) {
                             console.warn(`Chyba při načítání pozic pro regál ${shelf.nazev}:`, error);
                             // Přidej prázdné pozice aby se regál zobrazil
@@ -751,6 +936,10 @@ class RegalyTab {
                 `).join('')}
             </div>
         `;
+        
+        // Aktualizuj boční panel s kritickými expiracemi po načtení všech GB dat
+        console.log(`📊 Po renderAllShelves mám ${this.gitterboxes.length} GB v cache`);
+        this.updateCriticalList();
     }
 
     /**
@@ -778,7 +967,8 @@ class RegalyTab {
                 grid += `
                     <div class="position-cell has-tooltip ${cellClass} h-12 flex flex-col justify-center items-center cursor-pointer hover:scale-105 transition-transform" 
                          data-custom-tooltip="${escapeHtml(tooltip)}"
-                         onclick="regalyTab.showPositionDetail(${position?.id || 'null'}, ${gb?.cislo_gb || 'null'})">
+                         data-position-id="${position?.id || 'null'}" 
+                         data-gb-cislo="${gb?.cislo_gb || 'null'}">
                         <div class="text-xs font-bold">${gb ? gb.cislo_gb : '•'}</div>
                         <div class="text-xs text-gray-400">${gb ? gb.naplnenost_procenta + '%' : r+'-'+c}</div>
                     </div>
@@ -806,6 +996,10 @@ class RegalyTab {
         
         // Znovu načti všechna základní data
         await this.loadInitialData();
+        
+        // Aktualizuj boční panel
+        this.updateCriticalList();
+        this.updateRecentGb();
         
         // Pokud máme vybraný regál, obnovíme i pozice
         if (this.shelfSelector.value && this.shelfSelector.value !== 'all') {

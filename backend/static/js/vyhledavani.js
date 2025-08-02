@@ -351,12 +351,22 @@ class VyhledavaniTab {
                 </td>
                 <td class="text-center">${gb.pocet_polozek}</td>
                 <td>
-                    <button 
-                        onclick="event.stopPropagation(); vyhledavaniTab.showGbDetail(${gb.id})"
-                        class="text-blue-600 hover:text-blue-800 text-sm"
-                    >
-                        <i class="fas fa-eye"></i> Detail
-                    </button>
+                    <div class="flex space-x-2">
+                        <button 
+                            onclick="event.stopPropagation(); vyhledavaniTab.showGbDetail(${gb.id})"
+                            class="text-blue-600 hover:text-blue-800 text-sm"
+                            title="Detail Gitterboxu"
+                        >
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button 
+                            onclick="event.stopPropagation(); vyhledavaniTab.archiveGitterbox(${gb.id}, '${gb.cislo_gb}')"
+                            class="text-red-600 hover:text-red-800 text-sm"
+                            title="Vyskladnit celý Gitterbox"
+                        >
+                            <i class="fas fa-archive"></i>
+                        </button>
+                    </div>
                 </td>
             </tr>
         `;
@@ -501,6 +511,17 @@ ${gbData.polozky.map(item => {
         await this.loadInitialData();
         if (this.currentQuery || Object.values(this.currentFilters).some(v => v)) {
             await this.performSearch();
+        }
+    }
+
+    /**
+     * Archivace/vyskladnění Gitterboxu
+     */
+    archiveGitterbox(gbId, gbNumber) {
+        if (window.archiveModal) {
+            window.archiveModal.openForGitterbox(gbId, gbNumber);
+        } else {
+            console.error('Archive modal není k dispozici');
         }
     }
 }

@@ -470,6 +470,7 @@ def get_dashboard_stats(db: Session = Depends(get_database)):
         # Kapacita skladu
         volne_pozice = db.query(Position).filter(Position.status == "volna").count()
         max_pozice = get_total_positions()
+        max_cislo_gb = get_total_positions()  # Maximální číslo GB
         
         # Health score
         def calculate_health_score():
@@ -498,6 +499,7 @@ def get_dashboard_stats(db: Session = Depends(get_database)):
                 "expirovane_polozky": expirované_položky,
                 "blizko_expirace": blizko_expirace,
                 "volne_pozice": volne_pozice,
+                "max_cislo_gb": max_cislo_gb,
                 "obsazenost_skladu_procenta": round((max_pozice - volne_pozice) / max_pozice * 100, 1),
                 "celkovy_health_score": calculate_health_score()
             },
