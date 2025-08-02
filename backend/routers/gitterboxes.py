@@ -337,3 +337,172 @@ def get_free_positions_count(db: Session = Depends(get_database)):
         "obsazene_pozice": max_pozice - volne_pozice,
         "obsazenost_procenta": round((max_pozice - volne_pozice) / max_pozice * 100, 1)
     }
+
+@router.get("/reports/capacity")
+def get_capacity_report(db: Session = Depends(get_database)):
+    """Komplexní report naplněnosti skladu a GB"""
+    try:
+        # Základní statistiky pozic
+        volne_pozice = db.query(Position).filter(Position.status == "volna").count()
+        max_pozice = get_total_positions()
+        obsazene_pozice = max_pozice - volne_pozice
+        
+        # Statistiky GB
+        aktivni_gb = db.query(Gitterbox).filter(Gitterbox.stav == "aktivni").all()
+        celkem_gb = len(aktivni_gb)
+        
+        # Analýza naplněnosti GB
+        plne_naplnene = len([gb for gb in aktivni_gb if gb.naplnenost_procenta >= 90])
+        dobre_naplnene = len([gb for gb in aktivni_gb if 70 <= gb.naplnenost_procenta < 90])
+        nedostatecne_naplnene = len([gb for gb in aktivni_gb if gb.naplnenost_procenta < 70])
+        
+        # Průměrná naplněnost
+        prumerna_naplnenost = sum(gb.naplnenost_procenta for gb in aktivni_gb) / celkem_gb if celkem_gb > 0 else 0
+        
+        # GB s kritickými expiraci
+        gb_s_kritickymi_expiracemi = len([gb for gb in aktivni_gb if gb.ma_kriticke_expirace])
+        
+        # Statistiky položek
+        celkem_polozek = db.query(Item).filter(Item.stav == "aktivni").count()
+        
+        from datetime import datetime, timedelta
+        today = datetime.now().date()
+        expirované_položky = db.query(Item).filter(
+            Item.stav == "aktivni",
+            Item.sledovat_expiraci == True,
+            Item.expiracni_datum < today
+        ).count()
+        
+        kriticky_datum = today + timedelta(days=30)
+        blizko_expirace = db.query(Item).filter(
+            Item.stav == "aktivni",
+            Item.sledovat_expiraci == True,
+            Item.expiracni_datum >= today,
+            Item.expiracni_datum <= kriticky_datum
+        ).count()
+        
+        # Top 5 nejméně naplněných GB
+        nejmen_naplnene = sorted(aktivni_gb, key=lambda x: x.naplnenost_procenta)[:5]
+        top_nejmen_naplnene = []
+        for gb in nejmen_naplnene:
+            top_nejmen_naplnene.append({
+                "cislo_gb": gb.cislo_gb,
+                "naplnenost_procenta": gb.naplnenost_procenta,
+                "pocet_polozek": gb.pocet_polozek,
+                "zodpovedna_osoba": gb.zodpovedna_osoba,
+                "lokace": gb.pozice.regal.lokace.nazev,
+                "regal": gb.pozice.regal.nazev,
+                "pozice": f"{gb.pozice.radek}-{gb.pozice.sloupec}"
+            })
+        
+        return {
+            "status": "success",
+            "data": {
+                "pozice": {
+                    "celkem": max_pozice,
+                    "obsazene": obsazene_pozice,
+                    "volne": volne_pozice,
+                    "obsazenost_procenta": round(obsazene_pozice / max_pozice * 100, 1)
+                },
+                "gitterboxy": {
+                    "celkem_aktivnich": celkem_gb,
+                    "prumerna_naplnenost": round(prumerna_naplnenost, 1),
+                    "plne_naplnene": plne_naplnene,  # >= 90%
+                    "dobre_naplnene": dobre_naplnene,  # 70-89%
+                    "nedostatecne_naplnene": nedostatecne_naplnene,  # < 70%
+                    "s_kritickymi_expiracemi": gb_s_kritickymi_expiracemi
+                },
+                "polozky": {
+                    "celkem_aktivnich": celkem_polozek,
+                    "expirovane": expirované_položky,
+                    "blizko_expirace": blizko_expirace,  # do 30 dní
+                    "procento_problematickych": round((expirované_položky + blizko_expirace) / celkem_polozek * 100, 1) if celkem_polozek > 0 else 0
+                },
+                "doporuceni": {
+                    "top_nejmen_naplnene_gb": top_nejmen_naplnene,
+                    "akce_potrebne": gb_s_kritickymi_expiracemi > 0 or expirované_položky > 0,
+                    "priorita_expiraci": expirované_položky + blizko_expirace,
+                    "optimalizace_kapacity": nedostatecne_naplnene
+                }
+            },
+            "message": f"Report pro {celkem_gb} aktivních GB a {celkem_polozek} položek"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Chyba při generování reportu: {str(e)}")
+
+@router.get("/reports/dashboard")
+def get_dashboard_stats(db: Session = Depends(get_database)):
+    """Rychlé statistiky pro dashboard"""
+    try:
+        from datetime import datetime, timedelta
+        
+        # Základní čísla
+        aktivni_gb = db.query(Gitterbox).filter(Gitterbox.stav == "aktivni").count()
+        celkem_polozek = db.query(Item).filter(Item.stav == "aktivni").count()
+        
+        # Kritické stavy
+        today = datetime.now().date()
+        kriticky_datum = today + timedelta(days=30)
+        
+        gb_s_kritickymi_expiracemi = db.query(Gitterbox).filter(
+            Gitterbox.stav == "aktivni"
+        ).all()
+        
+        kriticke_gb = len([gb for gb in gb_s_kritickymi_expiracemi if gb.ma_kriticke_expirace])
+        
+        nedostatecne_naplnene_gb = len([gb for gb in gb_s_kritickymi_expiracemi if gb.naplnenost_procenta < 70])
+        
+        # Expirace
+        expirované_položky = db.query(Item).filter(
+            Item.stav == "aktivni",
+            Item.sledovat_expiraci == True,
+            Item.expiracni_datum < today
+        ).count()
+        
+        blizko_expirace = db.query(Item).filter(
+            Item.stav == "aktivni",
+            Item.sledovat_expiraci == True,
+            Item.expiracni_datum >= today,
+            Item.expiracni_datum <= kriticky_datum
+        ).count()
+        
+        # Kapacita skladu
+        volne_pozice = db.query(Position).filter(Position.status == "volna").count()
+        max_pozice = get_total_positions()
+        
+        # Health score
+        def calculate_health_score():
+            if aktivni_gb == 0 or celkem_polozek == 0:
+                return 100
+            
+            score = 100
+            if kriticke_gb > 0:
+                score -= min(30, (kriticke_gb / aktivni_gb) * 100)
+            if nedostatecne_naplnene_gb > 0:
+                score -= min(20, (nedostatecne_naplnene_gb / aktivni_gb) * 50)
+            if expirované_položky > 0:
+                score -= min(25, (expirované_položky / celkem_polozek) * 100)
+            if blizko_expirace > 0:
+                score -= min(15, (blizko_expirace / celkem_polozek) * 50)
+            
+            return max(0, round(score, 1))
+        
+        return {
+            "status": "success",
+            "data": {
+                "aktivni_gb": aktivni_gb,
+                "celkem_polozek": celkem_polozek,
+                "kriticke_gb": kriticke_gb,
+                "nedostatecne_naplnene_gb": nedostatecne_naplnene_gb,
+                "expirovane_polozky": expirované_položky,
+                "blizko_expirace": blizko_expirace,
+                "volne_pozice": volne_pozice,
+                "obsazenost_skladu_procenta": round((max_pozice - volne_pozice) / max_pozice * 100, 1),
+                "celkovy_health_score": calculate_health_score()
+            },
+            "message": "Dashboard statistiky načteny"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Chyba při načítání dashboard statistik: {str(e)}")

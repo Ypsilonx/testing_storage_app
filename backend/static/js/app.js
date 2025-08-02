@@ -50,6 +50,11 @@ class SkladovaApp {
                         console.error(`❌ Chyba při refreshu ${tab}:`, error);
                     }
                 }
+                
+                // Aktualizuj statistiky po refresh
+                if (window.updateHeaderStats) {
+                    window.updateHeaderStats();
+                }
             } else {
                 console.warn(`⚠️ Žádné callbacky pro tab: ${tab}`);
             }
@@ -421,6 +426,9 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         window.app = new SkladovaApp();
         
+        // Načteme statistiky ihned při startu
+        loadInitialStatistics();
+        
         // Debug informace do konzole
         console.log('🏗️ Aplikace inicializována');
         console.log('📋 Dostupné příkazy v konzoli:');
@@ -436,6 +444,30 @@ document.addEventListener('DOMContentLoaded', () => {
         
     }, 100);
 });
+
+// Funkce pro načtení počátečních statistik
+async function loadInitialStatistics() {
+    console.log('🔢 Načítám počáteční statistiky...');
+    try {
+        const response = await API.getDashboardStats();
+        if (response.data) {
+            // Aktualizuj všechny statistiky v hlavičce
+            const totalGbEl = document.getElementById('stats-total-gb');
+            const totalItemsEl = document.getElementById('stats-total-items');
+            const criticalEl = document.getElementById('stats-critical');
+            const utilizationEl = document.getElementById('stats-utilization');
+            
+            if (totalGbEl) totalGbEl.textContent = response.data.aktivni_gb;
+            if (totalItemsEl) totalItemsEl.textContent = response.data.celkem_polozek;
+            if (criticalEl) criticalEl.textContent = response.data.kriticke_gb;
+            if (utilizationEl) utilizationEl.textContent = response.data.obsazenost_skladu_procenta + '%';
+            
+            console.log(`✅ Statistiky načteny: ${response.data.aktivni_gb} GB, ${response.data.celkem_polozek} položek`);
+        }
+    } catch (error) {
+        console.error('❌ Chyba při načítání statistik:', error);
+    }
+}
 
 // Export utility funkcí
 window.isValidEmail = isValidEmail;

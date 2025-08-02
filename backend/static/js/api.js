@@ -179,6 +179,20 @@ const API = {
         return ApiClient.get(`/gitterboxes/${gbId}/items`);
     },
 
+    /**
+     * Získání capacity reportu
+     */
+    async getCapacityReport() {
+        return ApiClient.get('/gitterboxes/reports/capacity');
+    },
+
+    /**
+     * Získání dashboard statistik
+     */
+    async getDashboardStats() {
+        return ApiClient.get('/gitterboxes/reports/dashboard');
+    },
+
     // === POLOŽKY ===
     
     /**
@@ -207,6 +221,27 @@ const API = {
      */
     async getItem(itemId) {
         return ApiClient.get(`/items/${itemId}`);
+    },
+
+    /**
+     * Získání expirovaných položek
+     */
+    async getExpiredItems() {
+        return ApiClient.get('/items/expired');
+    },
+
+    /**
+     * Získání položek blízko expirace
+     */
+    async getExpiringSoonItems(daysAhead = 30) {
+        return ApiClient.get(`/items/expiring-soon?days_ahead=${daysAhead}`);
+    },
+
+    /**
+     * Batch označení položek jako expirované
+     */
+    async batchExpireItems(itemIds) {
+        return ApiClient.post('/items/batch-expire', itemIds);
     },
 
     // === POZICE ===

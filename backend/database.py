@@ -141,14 +141,18 @@ def get_storage_statistics():
     """
     db = SessionLocal()
     try:
-        from models import Location, Shelf, Position, Gitterbox
+        from models import Location, Shelf, Position, Gitterbox, Item
+        
+        # Spočítej položky přes JOIN s Gitterboxy pro přesnost
+        celkem_polozek_query = db.query(Item).join(Gitterbox, Item.gitterbox_id == Gitterbox.id).count()
         
         stats = {
             "lokace_celkem": db.query(Location).count(),
             "regaly_celkem": db.query(Shelf).count(),
             "pozice_celkem": db.query(Position).count(),
             "pozice_volne": db.query(Position).filter(Position.status == "volna").count(),
-            "gitterboxes_aktivni": db.query(Gitterbox).filter(Gitterbox.stav == "aktivni").count()
+            "gitterboxes_aktivni": db.query(Gitterbox).filter(Gitterbox.stav == "aktivni").count(),
+            "celkem_polozek": celkem_polozek_query
         }
         
         stats["pozice_obsazene"] = stats["pozice_celkem"] - stats["pozice_volne"]

@@ -209,7 +209,26 @@ class VyhledavaniTab {
      */
     async getAllGitterboxesForSearch() {
         const response = await API.getAllGitterboxes();
-        return response.data;
+        const gitterboxes = response.data;
+        
+        // Aktualizuj počet položek v hlavičce pomocí dashboard endpointu (efektivnější)
+        try {
+            const dashboardResponse = await API.getDashboardStats();
+            const statsElement = document.getElementById('stats-total-items');
+            if (statsElement && dashboardResponse.data) {
+                statsElement.textContent = dashboardResponse.data.celkem_polozek;
+            }
+        } catch (error) {
+            console.warn('Chyba při načítání dashboard statistik:', error);
+            // Fallback - sečti z načtených GB
+            const celkemPolozek = gitterboxes.reduce((suma, gb) => suma + (gb.pocet_polozek || 0), 0);
+            const statsElement = document.getElementById('stats-total-items');
+            if (statsElement) {
+                statsElement.textContent = celkemPolozek;
+            }
+        }
+        
+        return gitterboxes;
     }
 
     /**

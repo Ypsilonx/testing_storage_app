@@ -4,8 +4,12 @@
  * Datum: 27.7.2025
  */
 
+console.log('=== REGALY.JS SOUBOR SE NAČÍTÁ ===');
+console.log('Regaly.js loaded at:', new Date().toISOString());
+
 class RegalyTab {
     constructor() {
+        console.log('=== REGALY TAB CONSTRUCTOR START ===');
         this.currentLocation = null;
         this.currentShelf = null;
         this.selectedShelfId = 'all'; // Pro dropdown - 'all' nebo konkrétní shelf ID
@@ -16,9 +20,13 @@ class RegalyTab {
         this.recentGb = []; // Naposledy zobrazené GB
         this.allShelvesData = null; // Cache pro všechny regály
         
+        console.log('Volam initializeElements...');
         this.initializeElements();
+        console.log('Volam attachEventListeners...');
         this.attachEventListeners();
+        console.log('Volam loadInitialData...');
         this.loadInitialData();
+        console.log('=== REGALY TAB CONSTRUCTOR END ===');
     }
 
     /**
@@ -59,20 +67,20 @@ class RegalyTab {
     async loadInitialData() {
         try {
             showLoading();
+            console.log('🚀 SPOUŠTÍM loadInitialData...');
             
-            // Paralelní načtení dat
-            await Promise.all([
-                this.loadLocations(),
-                this.loadGitterboxes(),
-                this.loadStatistics()
-            ]);
+            // Načtení dat
+            console.log('📥 Načítám lokace...');
+            await this.loadLocations();
+            console.log('✅ Lokace načteny');
             
-            // Po načtení všech dat zobrazit přehled a aktualizovat statistiky
+            // Po načtení dat zobrazit přehled
             this.populateShelfSelector();
             this.renderAllShelves();
-            this.updateStatistics(); // Automatická aktualizace statistik
+            console.log('🎯 loadInitialData DOKONČENO');
             
         } catch (error) {
+            console.error('❌ CHYBA v loadInitialData:', error);
             showError('Chyba při načítání dat: ' + error.message);
         } finally {
             hideLoading();
@@ -102,34 +110,6 @@ class RegalyTab {
         } catch (error) {
             console.error('Chyba při načítání lokací:', error);
             throw error;
-        }
-    }
-
-    /**
-     * Načtení Gitterboxů
-     */
-    async loadGitterboxes() {
-        try {
-            const response = await API.getAllGitterboxes();
-            this.gitterboxes = response.data || [];
-            this.updateRecentGb(); // Změněno z updateGbByLocation
-            this.updateCriticalList();
-        } catch (error) {
-            console.error('Chyba při načítání Gitterboxů:', error);
-            throw error;
-        }
-    }
-
-    /**
-     * Načtení statistik
-     */
-    async loadStatistics() {
-        try {
-            const response = await API.getStatistics();
-            this.updateStatistics(response.data);
-        } catch (error) {
-            console.error('Chyba při načítání statistik:', error);
-            // Statistiky nejsou kritické, takže chybu jen logujeme
         }
     }
 
@@ -339,47 +319,6 @@ class RegalyTab {
         this.recentGb = this.recentGb.slice(0, 10);
         // Aktualizuj UI
         this.updateRecentGb();
-    }
-
-    /**
-     * Aktualizace statistik v headeru
-     */
-    updateStatistics() {
-        const totalGbEl = document.getElementById('stats-total-gb');
-        const criticalEl = document.getElementById('stats-critical');
-        const utilizationEl = document.getElementById('stats-utilization');
-
-        // Spočítej celkový počet pozic z načtených lokací
-        let totalPositions = 0;
-        if (this.locations && this.locations.length > 0) {
-            this.locations.forEach(location => {
-                if (location.regaly && location.regaly.length > 0) {
-                    location.regaly.forEach(shelf => {
-                        if (shelf.celkem_pozic) {
-                            totalPositions += shelf.celkem_pozic;
-                        }
-                    });
-                }
-            });
-        }
-
-        // Aktualizuj elementy
-        if (totalGbEl) {
-            const activeGb = this.gitterboxes ? this.gitterboxes.length : 0;
-            totalGbEl.textContent = `${activeGb}/${totalPositions}`;
-        }
-        
-        if (criticalEl) {
-            const criticalCount = this.gitterboxes ? 
-                this.gitterboxes.filter(gb => gb.ma_kriticke_expirace).length : 0;
-            criticalEl.textContent = criticalCount;
-        }
-        
-        if (utilizationEl && totalPositions > 0) {
-            const activeGb = this.gitterboxes ? this.gitterboxes.length : 0;
-            const utilization = Math.round((activeGb / totalPositions) * 100);
-            utilizationEl.textContent = `${utilization}%`;
-        }
     }
 
     /**
@@ -688,10 +627,7 @@ class RegalyTab {
             const response = await API.createGitterbox(gbData);
             showSuccess(`Gitterbox #${response.cislo_gb} byl úspěšně vytvořen`);
             
-            // Obnovení dat
-            await this.loadGitterboxes();
-            
-            // Pokud máme vybraný regál, obnovíme pozice
+            // Obnovení dat - jen znovu načteme aktuální zobrazení
             if (this.shelfSelector.value && this.shelfSelector.value !== 'all') {
                 await this.loadShelfPositions(this.shelfSelector.value);
                 this.renderSpecificShelf();
@@ -886,7 +822,10 @@ let regalyTab;
 
 // Inicializace při načtení stránky
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('=== REGALY.JS DOMContentLoaded EVENT ===');
+    console.log('Inicializuji RegalyTab...');
     regalyTab = new RegalyTab();
+    console.log('RegalyTab vytvoren:', regalyTab);
     
     // Export do window pro debugování
     window.regalyTab = regalyTab;

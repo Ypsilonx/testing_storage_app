@@ -93,6 +93,145 @@ async def create_item(item_data: ItemCreate, db: Session = Depends(get_database)
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Chyba při vytváření položky: {str(e)}")
 
+@router.get("/expired")
+async def get_expired_items(db: Session = Depends(get_database)):
+    """Získání všech expirovaných položek"""
+    try:
+        today = date.today()
+        
+        # Najdeme všechny položky které už expirovali
+        expired_items = db.query(Item).filter(
+            Item.stav == "aktivni",
+            Item.sledovat_expiraci == True,
+            Item.expiracni_datum < today
+        ).all()
+        
+        result = []
+        for item in expired_items:
+            # Informace o GB
+            gb_info = {
+                "cislo_gb": item.gitterbox.cislo_gb,
+                "zodpovedna_osoba": item.gitterbox.zodpovedna_osoba,
+                "lokace": item.gitterbox.pozice.regal.lokace.nazev,
+                "regal": item.gitterbox.pozice.regal.nazev,
+                "pozice": f"{item.gitterbox.pozice.radek}-{item.gitterbox.pozice.sloupec}"
+            }
+            
+            result.append({
+                "id": item.id,
+                "nazev_dilu": item.nazev_dilu,
+                "tma_cislo": item.tma_cislo,
+                "projekt": item.projekt,
+                "popis_mnozstvi": item.popis_mnozstvi,
+                "expiracni_datum": item.expiracni_datum.isoformat(),
+                "dny_po_expiraci": (today - item.expiracni_datum).days,
+                "gitterbox": gb_info
+            })
+        
+        return {
+            "status": "success",
+            "data": result,
+            "message": f"Nalezeno {len(result)} expirovaných položek",
+            "pocet_expirovaných": len(result)
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Chyba při načítání expirovaných položek: {str(e)}")
+
+@router.get("/expiring-soon")
+async def get_expiring_soon_items(days_ahead: int = 30, db: Session = Depends(get_database)):
+    """Získání položek blízko expirace (default 30 dní)"""
+    try:
+        today = date.today()
+        target_date = today + timedelta(days=days_ahead)
+        
+        # Najdeme položky které expirují v následujících X dnech
+        expiring_items = db.query(Item).filter(
+            Item.stav == "aktivni",
+            Item.sledovat_expiraci == True,
+            Item.expiracni_datum >= today,  # Ještě neexpirované
+            Item.expiracni_datum <= target_date  # Ale blízko expirace
+        ).all()
+        
+        result = []
+        for item in expiring_items:
+            # Informace o GB
+            gb_info = {
+                "cislo_gb": item.gitterbox.cislo_gb,
+                "zodpovedna_osoba": item.gitterbox.zodpovedna_osoba,
+                "lokace": item.gitterbox.pozice.regal.lokace.nazev,
+                "regal": item.gitterbox.pozice.regal.nazev,
+                "pozice": f"{item.gitterbox.pozice.radek}-{item.gitterbox.pozice.sloupec}"
+            }
+            
+            result.append({
+                "id": item.id,
+                "nazev_dilu": item.nazev_dilu,
+                "tma_cislo": item.tma_cislo,
+                "projekt": item.projekt,
+                "popis_mnozstvi": item.popis_mnozstvi,
+                "expiracni_datum": item.expiracni_datum.isoformat(),
+                "dny_do_expirace": item.dny_do_expirace,
+                "priorita": "kritická" if item.dny_do_expirace <= 7 else "vysoká" if item.dny_do_expirace <= 14 else "střední",
+                "gitterbox": gb_info
+            })
+        
+        # Seřadíme podle priority (nejkritičtější první)
+        result.sort(key=lambda x: x["dny_do_expirace"])
+        
+        return {
+            "status": "success",
+            "data": result,
+            "message": f"Nalezeno {len(result)} položek blízko expirace (do {days_ahead} dní)",
+            "pocet_blizko_expirace": len(result),
+            "kriticke": len([x for x in result if x["priorita"] == "kritická"]),
+            "vysoke": len([x for x in result if x["priorita"] == "vysoká"]),
+            "stredni": len([x for x in result if x["priorita"] == "střední"])
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Chyba při načítání položek blízko expirace: {str(e)}")
+
+@router.post("/batch-expire")
+async def batch_expire_items(item_ids: list[int], db: Session = Depends(get_database)):
+    """Batch označení položek jako expirované"""
+    try:
+        if not item_ids:
+            raise HTTPException(status_code=400, detail="Seznam ID položek nesmí být prázdný")
+        
+        # Najdeme všechny položky
+        items = db.query(Item).filter(Item.id.in_(item_ids)).all()
+        
+        if len(items) != len(item_ids):
+            found_ids = [item.id for item in items]
+            missing_ids = [id for id in item_ids if id not in found_ids]
+            raise HTTPException(
+                status_code=404, 
+                detail=f"Některé položky nebyly nalezeny: {missing_ids}"
+            )
+        
+        # Označíme jako expirované
+        updated_count = 0
+        for item in items:
+            if item.stav == "aktivni":
+                item.stav = "expirovana"
+                updated_count += 1
+        
+        db.commit()
+        
+        return {
+            "status": "success",
+            "message": f"Označeno {updated_count} položek jako expirovaných",
+            "aktualizovano": updated_count,
+            "celkem_zpracovano": len(items)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Chyba při batch operaci: {str(e)}")
+
 @router.get("/{item_id}")
 async def get_item(item_id: int, db: Session = Depends(get_database)):
     """Získání konkrétní položky"""
