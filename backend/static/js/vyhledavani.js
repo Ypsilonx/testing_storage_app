@@ -764,30 +764,95 @@ ${gbData.polozky.map(item => {
      * Přepnutí na zobrazení konkrétního regálu v regály tabu
      */
     switchToShelfView(shelfId) {
-        // Přepnutí na regály tab
-        const regalyTabBtn = document.getElementById('tab-regaly');
-        if (regalyTabBtn) {
+        try {
+            console.log('🔄 Přepínám na regál ID:', shelfId);
+            
+            // Přepnutí na regály tab
+            const regalyTabBtn = document.getElementById('tab-regaly');
+            if (!regalyTabBtn) {
+                console.error('❌ Tab regály nebyl nalezen');
+                return;
+            }
+            
             regalyTabBtn.click();
             
-            // Počkáme chvilku a nastavíme regál
-            setTimeout(() => {
-                if (window.regalyTab) {
-                    // Najdeme lokaci pro tento regál
-                    for (const location of this.locations) {
-                        const shelf = location.regaly.find(r => r.id == shelfId);
-                        if (shelf) {
-                            window.regalyTab.locationSelector.value = location.id;
-                            window.regalyTab.onLocationChange(location.id);
-                            
-                            setTimeout(() => {
-                                window.regalyTab.shelfSelector.value = shelfId;
-                                window.regalyTab.onShelfChange(shelfId);
-                            }, 200);
-                            break;
+            // Čekáme na inicializaci regalyTab s postupně se zvyšujícím čekáním
+            const attemptSwitch = (attempt = 0) => {
+                const maxAttempts = 10;
+                const waitTime = 100 + (attempt * 50); // 100ms, 150ms, 200ms, atd.
+                
+                setTimeout(() => {
+                    try {
+                        // Kontrola existence regalyTab
+                        if (!window.regalyTab) {
+                            if (attempt < maxAttempts) {
+                                console.log(`⏳ Pokus ${attempt + 1}/${maxAttempts}: regalyTab ještě není k dispozici, čekám...`);
+                                attemptSwitch(attempt + 1);
+                                return;
+                            } else {
+                                console.error('❌ window.regalyTab není k dispozici ani po', maxAttempts, 'pokusech');
+                                return;
+                            }
+                        }
+                        
+                        // RegalyTab používá jen shelfSelector, ne locationSelector!
+                        if (!window.regalyTab.shelfSelector) {
+                            if (attempt < maxAttempts) {
+                                console.log(`⏳ Pokus ${attempt + 1}/${maxAttempts}: shelfSelector ještě není k dispozici, čekám...`);
+                                attemptSwitch(attempt + 1);
+                                return;
+                            } else {
+                                console.error('❌ regalyTab.shelfSelector není k dispozici ani po', maxAttempts, 'pokusech');
+                                return;
+                            }
+                        }
+                        
+                        // Najdeme lokaci pro tento regál
+                        let foundLocation = null;
+                        let foundShelf = null;
+                        
+                        for (const location of this.locations) {
+                            const shelf = location.regaly.find(r => r.id == shelfId);
+                            if (shelf) {
+                                foundLocation = location;
+                                foundShelf = shelf;
+                                break;
+                            }
+                        }
+                        
+                        if (!foundLocation || !foundShelf) {
+                            console.error('❌ Lokace nebo regál nebyl nalezen pro ID:', shelfId);
+                            return;
+                        }
+                        
+                        console.log('✅ Nalezen regál:', foundShelf.nazev, 'v lokaci:', foundLocation.nazev);
+                        
+                        // RegalyTab má novou architekturu - přímo nastavíme regál (obsahuje všechny regály)
+                        window.regalyTab.shelfSelector.value = shelfId;
+                        
+                        // Zavoláme metodu pro změnu regálu
+                        if (typeof window.regalyTab.onShelfChange === 'function') {
+                            window.regalyTab.onShelfChange(shelfId);
+                            console.log('🎯 Úspěšně přepnuto na regál:', foundShelf.nazev);
+                        } else {
+                            console.error('❌ regalyTab.onShelfChange není funkce');
+                        }
+                        
+                    } catch (error) {
+                        console.error('❌ Chyba při přepínání na regál (pokus', attempt + 1, '):', error);
+                        
+                        if (attempt < maxAttempts) {
+                            attemptSwitch(attempt + 1);
                         }
                     }
-                }
-            }, 100);
+                }, waitTime);
+            };
+            
+            // Spustit první pokus
+            attemptSwitch(0);
+            
+        } catch (error) {
+            console.error('❌ Chyba v switchToShelfView:', error);
         }
     }
 
