@@ -632,10 +632,20 @@ class VyhledavaniTab {
     /**
      * Editace Gitterboxu
      */
-    editGitterbox(gbId) {
-        // Pro teď jednoduchá implementace - později modal
-        if (window.gbModal) {
-            window.gbModal.openForEdit(gbId);
+    async editGitterbox(gbId) {
+        if (window.gitterboxModal) {
+            try {
+                // Nejdřív načteme data GB
+                const response = await API.getGitterbox(gbId);
+                if (response.status === 'success') {
+                    window.gitterboxModal.openEdit(response.data);
+                } else {
+                    alert('Chyba při načítání dat GB: ' + response.message);
+                }
+            } catch (error) {
+                console.error('Chyba při načítání GB pro editaci:', error);
+                alert('Chyba při načítání dat GB: ' + error.message);
+            }
         } else {
             alert(`Editace GB bude implementována v další fázi (GB ID: ${gbId})`);
         }
@@ -645,9 +655,14 @@ class VyhledavaniTab {
      * Přidání položky do GB
      */
     addItemToGb(gbId) {
-        // Pro teď jednoduchá implementace - později modal
         if (window.itemModal) {
-            window.itemModal.openForGb(gbId);
+            // Pro openCreate potřebujeme GB číslo, ne ID
+            const gb = this.searchResults.find(g => g.id === gbId);
+            if (gb) {
+                window.itemModal.openCreate(gbId, gb.cislo_gb);
+            } else {
+                alert('Nepodařilo se najít data GB');
+            }
         } else {
             alert(`Přidání položky bude implementováno v další fázi (GB ID: ${gbId})`);
         }
@@ -656,10 +671,20 @@ class VyhledavaniTab {
     /**
      * Editace položky
      */
-    editItem(itemId) {
-        // Pro teď jednoduchá implementace - později modal
+    async editItem(itemId) {
         if (window.itemModal) {
-            window.itemModal.openForEdit(itemId);
+            try {
+                // Nejdřív načteme data položky
+                const response = await API.getItem(itemId);
+                if (response.status === 'success') {
+                    window.itemModal.openEdit(response.data);
+                } else {
+                    alert('Chyba při načítání dat položky: ' + response.message);
+                }
+            } catch (error) {
+                console.error('Chyba při načítání položky pro editaci:', error);
+                alert('Chyba při načítání dat položky: ' + error.message);
+            }
         } else {
             alert(`Editace položky bude implementována v další fázi (Item ID: ${itemId})`);
         }
@@ -671,11 +696,11 @@ class VyhledavaniTab {
     archiveItem(itemId, itemName) {
         if (window.archiveModal) {
             window.archiveModal.openForItem(itemId, itemName);
+            // Cache se invaliduje automaticky při refresh v archiveModal
         } else {
             const confirmed = confirm(`Opravdu chcete vyskladnit položku "${itemName}"?`);
             if (confirmed) {
                 console.log('Archivace položky:', itemId);
-                // Zde by byla implementace archivace
                 alert('Archivace položky bude implementována v další fázi');
             }
         }
@@ -786,6 +811,7 @@ ${gbData.polozky.map(item => {
     async refresh() {
         const wasExpanded = new Set(this.expandedRows); // Zapamatuj rozbalené řádky
         this.expandedRows.clear();
+        this.itemsCache.clear(); // Invaliduj cache při refresh
         
         await this.loadInitialData();
         
