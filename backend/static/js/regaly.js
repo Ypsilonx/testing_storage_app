@@ -232,7 +232,25 @@ class RegalyTab {
                 const position = this.positions.find(pos => pos.radek === r && pos.sloupec === c);
                 const gb = position ? position.gitterbox : null;
                 
-                const cellClass = gb ? 'gb-pozice-aktivni' : 'gb-pozice-volna';
+                // Jednoduché barevné kódování
+                let cellClass = 'gb-prazdna'; // průhledný vnitřek, šedý rámeček
+                
+                if (gb) {
+                    if (gb.ma_kriticke_expirace) {
+                        // Expirující GB - barva dle naplněnosti + červený blikající rámeček
+                        if (gb.naplnenost_procenta >= 100) {
+                            cellClass = 'gb-expirace-plny';
+                        } else if (gb.naplnenost_procenta > 0) {
+                            cellClass = 'gb-expirace-neuplny';
+                        } else {
+                            cellClass = 'gb-expirace-prazdna';
+                        }
+                    } else if (gb.naplnenost_procenta >= 100) {
+                        cellClass = 'gb-plny'; // modrá
+                    } else {
+                        cellClass = 'gb-neuplny'; // oranžová
+                    }
+                }
                 
                 // Stylizované tooltipy - jako čistý text pro data-tooltip
                 const tooltip = gb ? 
@@ -245,7 +263,7 @@ class RegalyTab {
                          data-position-id="${position?.id || 'null'}" 
                          data-gb-cislo="${gb?.cislo_gb || 'null'}">
                         <div class="text-sm font-bold">${gb ? gb.cislo_gb : '•'}</div>
-                        <div class="text-xs text-gray-400">${gb ? gb.naplnenost_procenta + '%' : 'Volná'}</div>
+                        <div class="text-xs">${gb ? gb.naplnenost_procenta + '%' : 'Volná'}</div>
                     </div>
                 `;
             }
@@ -957,7 +975,25 @@ class RegalyTab {
                 // GB informace jsou přímo v pozici
                 const gb = position ? position.gitterbox : null;
                 
-                const cellClass = gb ? 'gb-pozice-aktivni' : 'gb-pozice-volna';
+                // Jednoduché barevné kódování
+                let cellClass = 'gb-prazdna'; // průhledný vnitřek, šedý rámeček
+                
+                if (gb) {
+                    if (gb.ma_kriticke_expirace) {
+                        // Expirující GB - barva dle naplněnosti + červený blikající rámeček
+                        if (gb.naplnenost_procenta >= 100) {
+                            cellClass = 'gb-expirace-plny';
+                        } else if (gb.naplnenost_procenta > 0) {
+                            cellClass = 'gb-expirace-neuplny';
+                        } else {
+                            cellClass = 'gb-expirace-prazdna';
+                        }
+                    } else if (gb.naplnenost_procenta >= 100) {
+                        cellClass = 'gb-plny'; // modrá
+                    } else {
+                        cellClass = 'gb-neuplny'; // oranžová
+                    }
+                }
                 
                 // Stylizované tooltipy - jako čistý text pro title atribut
                 const tooltip = gb ? 
@@ -970,7 +1006,7 @@ class RegalyTab {
                          data-position-id="${position?.id || 'null'}" 
                          data-gb-cislo="${gb?.cislo_gb || 'null'}">
                         <div class="text-xs font-bold">${gb ? gb.cislo_gb : '•'}</div>
-                        <div class="text-xs text-gray-400">${gb ? gb.naplnenost_procenta + '%' : r+'-'+c}</div>
+                        <div class="text-xs">${gb ? gb.naplnenost_procenta + '%' : r+'-'+c}</div>
                     </div>
                 `;
             }

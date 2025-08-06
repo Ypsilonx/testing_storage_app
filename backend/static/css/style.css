@@ -17,6 +17,86 @@ i.fas, i.far, i.fab, i.fal, i.fad, i.fa {
     font-weight: 900 !important;
 }
 
+/* BAREVNÉ KÓDOVÁNÍ GB POZIC - Phase 4 - Vyšší specificita */
+
+/* Prázdné pozice - průhledný vnitřek, šedý rámeček */
+.position-cell.gb-prazdna {
+    background-color: transparent !important;
+    border-color: #9ca3af !important;
+    color: #9ca3af !important;
+}
+
+.position-cell.gb-prazdna div {
+    color: #9ca3af !important;
+}
+
+/* Plný GB - světle modrý rámeček, tmavý vnitřek, bílé písmo */
+.position-cell.gb-plny {
+    background-color: #1e40af !important; /* tmavě modrá */
+    border-color: #60a5fa !important; /* světle modrá */
+    color: white !important;
+}
+
+.position-cell.gb-plny div {
+    color: white !important;
+}
+
+/* Neúplný GB - tmavší oranžová pro dark mode */
+.position-cell.gb-neuplny {
+    background-color: #c2410c !important; /* tmavě oranžová */
+    border-color: #fb923c !important; /* světlejší oranžová rámeček */
+    color: white !important;
+}
+
+.position-cell.gb-neuplny div {
+    color: white !important;
+}
+
+/* Expirující GB - barva dle naplněnosti + blikající červený rámeček */
+.position-cell.gb-expirace-prazdna {
+    background-color: transparent !important;
+    border-color: #dc2626 !important;
+    color: #9ca3af !important;
+    animation: border-blink 1.5s infinite;
+}
+
+.position-cell.gb-expirace-prazdna div {
+    color: #9ca3af !important;
+}
+
+.position-cell.gb-expirace-plny {
+    background-color: #1e40af !important; /* tmavě modrá jako plný */
+    border-color: #dc2626 !important; /* červený rámeček */
+    color: white !important;
+    animation: border-blink 1.5s infinite;
+}
+
+.position-cell.gb-expirace-plny div {
+    color: white !important;
+}
+
+.position-cell.gb-expirace-neuplny {
+    background-color: #c2410c !important; /* tmavě oranžová jako neúplný */
+    border-color: #dc2626 !important; /* červený rámeček */
+    color: white !important;
+    animation: border-blink 1.5s infinite;
+}
+
+.position-cell.gb-expirace-neuplny div {
+    color: white !important;
+}
+
+@keyframes border-blink {
+    0%, 50% { 
+        border-color: #dc2626; /* červená */
+        box-shadow: 0 0 0 1px #dc2626;
+    }
+    51%, 100% { 
+        border-color: #7f1d1d; /* tmavší červená */
+        box-shadow: 0 0 0 1px #7f1d1d;
+    }
+}
+
 body {
     background-color: #1a1a1a !important;
     color: #e0e0e0 !important;
@@ -180,31 +260,6 @@ body {
 /* Skryj výchozí browser tooltip a přidej vlastní styling */
 .position-cell {
     position: relative;
-}
-
-/* Nové světlejší barvy pro pozice */
-.gb-pozice-volna {
-    background-color: #065f46 !important; /* Tmavě zelená */
-    border-color: #10b981 !important; /* Světlejší zelená */
-    color: #6ee7b7 !important; /* Velmi světlá zelená */
-}
-
-.gb-pozice-aktivni {
-    background-color: #1e40af !important; /* Tmavě modrá */
-    border-color: #3b82f6 !important; /* Světlejší modrá */
-    color: #93c5fd !important; /* Velmi světlá modrá */
-}
-
-.gb-pozice-kriticka {
-    background-color: #991b1b !important; /* Tmavě červená */
-    border-color: #ef4444 !important; /* Světlejší červená */
-    color: #fca5a5 !important; /* Velmi světlá červená */
-}
-
-.gb-pozice-plny {
-    background-color: #92400e !important; /* Tmavě oranžová */
-    border-color: #f59e0b !important; /* Světlejší oranžová */
-    color: #fcd34d !important; /* Velmi světlá oranžová */
 }
 
 /* Stylizované tooltipy pro pozice - tmavý režim */
