@@ -859,15 +859,72 @@ ${gbData.polozky.map(item => {
     /**
      * Export do PDF
      */
-    exportToPdf() {
-        alert('Export do PDF bude implementován v další fázi');
+    async exportToPdf() {
+        try {
+            showLoading();
+            
+            // Získej aktuální filtry
+            const filters = this.getCurrentFilters();
+            
+            // Získej download URL
+            const downloadUrl = await API.exportSearchToPdf(filters);
+            
+            // Vytvoř dočasný link pro download
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.target = '_blank';
+            link.click();
+            
+            showSuccess('PDF export byl spuštěn');
+            
+        } catch (error) {
+            console.error('Chyba při exportu do PDF:', error);
+            showError('Chyba při exportu do PDF: ' + error.message);
+        } finally {
+            hideLoading();
+        }
     }
 
     /**
      * Export do Excel
      */
-    exportToExcel() {
-        alert('Export do Excel bude implementován v další fázi');
+    async exportToExcel() {
+        try {
+            showLoading();
+            
+            // Získej aktuální filtry
+            const filters = this.getCurrentFilters();
+            
+            // Získej download URL
+            const downloadUrl = await API.exportSearchToExcel(filters);
+            
+            // Vytvoř dočasný link pro download
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.target = '_blank';
+            link.click();
+            
+            showSuccess('Excel export byl spuštěn');
+            
+        } catch (error) {
+            console.error('Chyba při exportu do Excel:', error);
+            showError('Chyba při exportu do Excel: ' + error.message);
+        } finally {
+            hideLoading();
+        }
+    }
+
+    /**
+     * Získání aktuálních filtrů pro export
+     */
+    getCurrentFilters() {
+        return {
+            query: this.searchInput.value.trim() || null,
+            location_id: this.filterLocation.value || null,
+            project: this.filterProject.value || null,
+            person: this.filterPerson.value || null,
+            status: this.filterStatus.value || null
+        };
     }
 
     /**

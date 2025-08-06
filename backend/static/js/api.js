@@ -337,6 +337,40 @@ const API = {
      */
     getArchiveDownloadUrl() {
         return `${API_BASE_URL}/archive/export`;
+    },
+
+    // === EXPORT METODY ===
+
+    /**
+     * Export vyhledávání do PDF
+     */
+    async exportSearchToPdf(filters = {}) {
+        const params = new URLSearchParams();
+        
+        if (filters.query) params.append('query', filters.query);
+        if (filters.location_id) params.append('location_id', filters.location_id);
+        if (filters.project) params.append('project', filters.project);
+        if (filters.person) params.append('person', filters.person);
+        if (filters.status) params.append('status', filters.status);
+        
+        const url = `${API_BASE_URL}/export/search/pdf?${params.toString()}`;
+        return url; // Vrátíme URL pro download
+    },
+
+    /**
+     * Export vyhledávání do Excel
+     */
+    async exportSearchToExcel(filters = {}) {
+        const params = new URLSearchParams();
+        
+        if (filters.query) params.append('query', filters.query);
+        if (filters.location_id) params.append('location_id', filters.location_id);
+        if (filters.project) params.append('project', filters.project);
+        if (filters.person) params.append('person', filters.person);
+        if (filters.status) params.append('status', filters.status);
+        
+        const url = `${API_BASE_URL}/export/search/excel?${params.toString()}`;
+        return url; // Vrátíme URL pro download
     }
 };
 

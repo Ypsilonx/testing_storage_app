@@ -14,7 +14,7 @@ from pathlib import Path
 
 from database import get_database, init_database, get_storage_statistics
 from models import Location, Shelf, Position, Gitterbox, Item
-from routers import gitterboxes, items, positions, archive
+from routers import gitterboxes, items, positions, archive, export
 
 # Vytvoření FastAPI aplikace
 app = FastAPI(
@@ -52,6 +52,9 @@ app.include_router(positions.router)
 
 # Přidání routeru pro archivaci a vyskladnění
 app.include_router(archive.router)
+
+# Přidání routeru pro export dat
+app.include_router(export.router)
 
 
 @app.on_event("startup")
