@@ -11,6 +11,7 @@ class VyhledavaniTab {
         this.currentQuery = '';
         this.currentFilters = {};
         this.expandedRows = new Set(); // Sledování rozbalených řádků
+        this.itemsCache = new Map(); // Cache pro položky GB (gbId -> items)
         
         this.initializeElements();
         this.attachEventListeners();
@@ -30,6 +31,7 @@ class VyhledavaniTab {
         // Filtry
         this.filterLocation = document.getElementById('filter-location');
         this.filterStatus = document.getElementById('filter-status');
+        this.filterProject = document.getElementById('filter-project');
         this.filterPerson = document.getElementById('filter-person');
         
         // Export tlačítka
@@ -62,7 +64,8 @@ class VyhledavaniTab {
         
         this.filterLocation.addEventListener('change', debouncedSearch);
         this.filterStatus.addEventListener('change', debouncedSearch);
-        this.filterPerson.addEventListener('input', debouncedSearch);
+        this.filterProject.addEventListener('change', debouncedSearch);
+        this.filterPerson.addEventListener('change', debouncedSearch);
 
         // Export tlačítka
         this.exportPdfBtn.addEventListener('click', () => {
@@ -81,7 +84,8 @@ class VyhledavaniTab {
         try {
             await Promise.all([
                 this.loadLocations(),
-                this.loadWarehouseTree()
+                this.loadWarehouseTree(),
+                this.loadProjectsAndPersons()
             ]);
             // Automaticky zobraz všechna data při načtení záložky
             await this.performSearch();
@@ -114,6 +118,79 @@ class VyhledavaniTab {
             option.value = location.nazev;
             option.textContent = location.nazev;
             this.filterLocation.appendChild(option);
+        });
+    }
+
+    /**
+     * Načtení projektů a osob pro filtry
+     */
+    async loadProjectsAndPersons() {
+        try {
+            // Načteme všechna GB
+            const response = await API.getAllGitterboxes();
+            const gitterboxes = response.data;
+            
+            // Získáme všechny položky pro projekty a naplníme cache
+            const allItems = [];
+            for (const gb of gitterboxes) {
+                try {
+                    const itemsResponse = await API.getGitterboxItems(gb.id);
+                    const items = itemsResponse.data.polozky;
+                    this.itemsCache.set(gb.id, items); // Uložíme do cache
+                    allItems.push(...items);
+                } catch (error) {
+                    console.warn(`Chyba při načítání položek pro GB ${gb.id}:`, error);
+                    this.itemsCache.set(gb.id, []); // Prázdný array při chybě
+                }
+            }
+            
+            // Extrakce unikátních projektů
+            const projects = [...new Set(
+                allItems
+                    .map(item => item.projekt)
+                    .filter(projekt => projekt && projekt.trim() !== '')
+            )].sort();
+            
+            // Extrakce unikátních osob
+            const persons = [...new Set(
+                gitterboxes
+                    .map(gb => gb.zodpovedna_osoba)
+                    .filter(osoba => osoba && osoba.trim() !== '')
+            )].sort();
+            
+            this.populateProjectFilter(projects);
+            this.populatePersonFilter(persons);
+            
+        } catch (error) {
+            console.error('Chyba při načítání projektů a osob:', error);
+        }
+    }
+
+    /**
+     * Naplnění filtru projektů
+     */
+    populateProjectFilter(projects) {
+        this.filterProject.innerHTML = '<option value="">Všechny projekty</option>';
+        
+        projects.forEach(project => {
+            const option = document.createElement('option');
+            option.value = project;
+            option.textContent = project;
+            this.filterProject.appendChild(option);
+        });
+    }
+
+    /**
+     * Naplnění filtru osob
+     */
+    populatePersonFilter(persons) {
+        this.filterPerson.innerHTML = '<option value="">Všechny osoby</option>';
+        
+        persons.forEach(person => {
+            const option = document.createElement('option');
+            option.value = person;
+            option.textContent = person;
+            this.filterPerson.appendChild(option);
         });
     }
 
@@ -191,6 +268,7 @@ class VyhledavaniTab {
             this.currentFilters = {
                 location: this.filterLocation.value,
                 status: this.filterStatus.value,
+                project: this.filterProject.value,
                 person: this.filterPerson.value.trim()
             };
 
@@ -270,8 +348,15 @@ class VyhledavaniTab {
 
         // Filtr podle zodpovědné osoby
         if (this.currentFilters.person) {
-            const person = this.currentFilters.person.toLowerCase();
-            results = results.filter(gb => gb.zodpovedna_osoba.toLowerCase().includes(person));
+            results = results.filter(gb => gb.zodpovedna_osoba === this.currentFilters.person);
+        }
+
+        // Filtr podle projektu - používáme cache
+        if (this.currentFilters.project) {
+            results = results.filter(gb => {
+                const items = this.itemsCache.get(gb.id) || [];
+                return items.some(item => item.projekt === this.currentFilters.project);
+            });
         }
 
         return results;
@@ -486,17 +571,26 @@ class VyhledavaniTab {
      */
     async loadGbItems(gbId) {
         try {
-            const itemsResponse = await API.getGitterboxItems(gbId);
             const itemsContainer = document.getElementById(`gb-items-${gbId}`);
             
             if (!itemsContainer) return;
             
-            if (itemsResponse.data.polozky.length === 0) {
+            // Zkusíme najít v cache
+            let items = this.itemsCache.get(gbId);
+            
+            // Pokud není v cache, načteme z API
+            if (!items) {
+                const itemsResponse = await API.getGitterboxItems(gbId);
+                items = itemsResponse.data.polozky;
+                this.itemsCache.set(gbId, items); // Uložíme do cache
+            }
+            
+            if (items.length === 0) {
                 itemsContainer.innerHTML = '<div class="text-gray-500 italic">Žádné položky</div>';
                 return;
             }
             
-            itemsContainer.innerHTML = itemsResponse.data.polozky.map(item => `
+            itemsContainer.innerHTML = items.map(item => `
                 <div class="flex items-center justify-between p-2 bg-white rounded border">
                     <div class="flex-1">
                         <div class="font-medium">${escapeHtml(item.nazev_dilu)}</div>
@@ -630,6 +724,7 @@ ${gbData.polozky.map(item => {
         this.searchInput.value = '';
         this.filterLocation.value = '';
         this.filterStatus.value = '';
+        this.filterProject.value = '';
         this.filterPerson.value = '';
         
         this.currentQuery = '';
