@@ -37,12 +37,18 @@ class RegalyTab {
         this.shelfSelector = document.getElementById('shelf-selector');
         this.shelfGrid = document.getElementById('shelf-grid');
         this.criticalList = document.getElementById('critical-list');
+        this.expiringList = document.getElementById('expiring-list');
         this.recentGbList = document.getElementById('recent-gb'); // Změněno z gb-by-location
         this.newGbBtn = document.getElementById('btn-new-gb');
         this.quickSearchBtn = document.getElementById('btn-quick-search');
-    }
-
-    /**
+        
+        // Expiry filter tlačítka
+        this.expiry7Btn = document.getElementById('expiry-7-btn');
+        this.expiry14Btn = document.getElementById('expiry-14-btn');
+        this.expiry30Btn = document.getElementById('expiry-30-btn');
+        
+        this.currentExpiryDays = 30; // Default
+    }    /**
      * Připojení event listenerů
      */
     attachEventListeners() {
@@ -58,6 +64,19 @@ class RegalyTab {
 
         this.quickSearchBtn.addEventListener('click', () => {
             this.switchToSearchTab();
+        });
+
+        // Expiry filter tlačítka
+        this.expiry7Btn.addEventListener('click', () => {
+            this.setExpiryFilter(7);
+        });
+
+        this.expiry14Btn.addEventListener('click', () => {
+            this.setExpiryFilter(14);
+        });
+
+        this.expiry30Btn.addEventListener('click', () => {
+            this.setExpiryFilter(30);
         });
 
         // Event delegation pro position cells
@@ -319,6 +338,7 @@ class RegalyTab {
         
         // Aktualizuj boční panel s kritickými expiracemi po načtení GB dat
         this.updateCriticalList();
+        this.updateExpiringList();
     }
 
     /**
@@ -958,6 +978,7 @@ class RegalyTab {
         // Aktualizuj boční panel s kritickými expiracemi po načtení všech GB dat
         console.log(`📊 Po renderAllShelves mám ${this.gitterboxes.length} GB v cache`);
         this.updateCriticalList();
+        this.updateExpiringList();
     }
 
     /**
@@ -1035,6 +1056,7 @@ class RegalyTab {
         
         // Aktualizuj boční panel
         this.updateCriticalList();
+        this.updateExpiringList();
         this.updateRecentGb();
         
         // Pokud máme vybraný regál, obnovíme i pozice
@@ -1043,6 +1065,140 @@ class RegalyTab {
             this.renderSpecificShelf();
         } else {
             await this.renderAllShelves();
+        }
+    }
+    
+    /**
+     * Nastavení expiry filtru a refresh dat
+     */
+    async setExpiryFilter(days) {
+        this.currentExpiryDays = days;
+        
+        // Aktualizuj aktivní tlačítko
+        [this.expiry7Btn, this.expiry14Btn, this.expiry30Btn].forEach(btn => {
+            btn.classList.remove('expiry-active');
+        });
+        
+        if (days === 7) this.expiry7Btn.classList.add('expiry-active');
+        else if (days === 14) this.expiry14Btn.classList.add('expiry-active');
+        else if (days === 30) this.expiry30Btn.classList.add('expiry-active');
+        
+        // Refresh expiring list
+        await this.updateExpiringList();
+    }
+    
+    /**
+     * Aktualizace seznamu blížících se expirací
+     */
+    async updateExpiringList() {
+        if (!this.expiringList) return;
+        
+        try {
+            console.log(`📅 Načítám expirující položky (${this.currentExpiryDays} dní)...`);
+            this.expiringList.innerHTML = '<div class="text-gray-500 text-sm italic">Načítám...</div>';
+            
+            const response = await API.getExpiringSoonItems(this.currentExpiryDays);
+            const items = response.data || [];
+            
+            if (items.length === 0) {
+                this.expiringList.innerHTML = `
+                    <div class="text-gray-500 text-sm italic text-center py-4">
+                        <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                        Žádné expirace v následujících ${this.currentExpiryDays} dnech
+                    </div>
+                `;
+                return;
+            }
+            
+            // Seřazené podle priority a dni do expirace
+            items.sort((a, b) => a.dny_do_expirace - b.dny_do_expirace);
+            
+            let html = '';
+            items.forEach(item => {
+                const priorityClass = item.priorita === 'kritická' ? 'border-red-200 bg-red-50' :
+                                   item.priorita === 'vysoká' ? 'border-orange-200 bg-orange-50' :
+                                   'border-yellow-200 bg-yellow-50';
+                                   
+                const priorityIcon = item.priorita === 'kritická' ? 'fas fa-exclamation-triangle text-red-500' :
+                                   item.priorita === 'vysoká' ? 'fas fa-exclamation-circle text-orange-500' :
+                                   'fas fa-info-circle text-yellow-600';
+                                   
+                const dnyText = item.dny_do_expirace === 1 ? '1 den' :
+                               item.dny_do_expirace <= 4 ? `${item.dny_do_expirace} dny` :
+                               `${item.dny_do_expirace} dní`;
+                
+                html += `
+                    <div class="border ${priorityClass} rounded-lg p-3 cursor-pointer hover:shadow-md transition-shadow"
+                         onclick="regalyTab.navigateToGb(${item.gitterbox.cislo_gb})">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center mb-1">
+                                    <i class="${priorityIcon} mr-2"></i>
+                                    <span class="font-medium text-sm">GB #${item.gitterbox.cislo_gb}</span>
+                                    <span class="ml-2 text-xs text-gray-600">${item.gitterbox.zodpovedna_osoba}</span>
+                                </div>
+                                <div class="text-sm text-gray-800 mb-1 truncate">${item.nazev_dilu}</div>
+                                <div class="text-xs text-gray-600">
+                                    ${item.gitterbox.lokace} → ${item.gitterbox.regal} (${item.gitterbox.pozice})
+                                </div>
+                            </div>
+                            <div class="text-right ml-2">
+                                <div class="text-xs font-bold ${item.priorita === 'kritická' ? 'text-red-600' : item.priorita === 'vysoká' ? 'text-orange-600' : 'text-yellow-700'}">
+                                    ${dnyText}
+                                </div>
+                                <div class="text-xs text-gray-500">${new Date(item.expiracni_datum).toLocaleDateString('cs-CZ')}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            this.expiringList.innerHTML = html;
+            console.log(`📅 Zobrazeno ${items.length} expirujících položek`);
+            
+        } catch (error) {
+            console.error('❌ Chyba při načítání expirujících položek:', error);
+            this.expiringList.innerHTML = `
+                <div class="text-red-500 text-sm">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    Chyba při načítání
+                </div>
+            `;
+        }
+    }
+    
+    /**
+     * Navigace na konkrétní GB (z expiry listu)
+     */
+    navigateToGb(gbNumber) {
+        // Najdeme GB ve všech datech
+        let targetGb = null;
+        let targetShelf = null;
+        
+        if (this.allShelvesData) {
+            for (const shelf of this.allShelvesData) {
+                for (const position of shelf.positions) {
+                    if (position.gitterbox && position.gitterbox.cislo_gb === gbNumber) {
+                        targetGb = position.gitterbox;
+                        targetShelf = shelf.shelf;
+                        break;
+                    }
+                }
+                if (targetGb) break;
+            }
+        }
+        
+        if (targetGb && targetShelf) {
+            // Přepneme na konkrétní regál
+            this.shelfSelector.value = targetShelf.id;
+            this.onShelfChange(targetShelf.id);
+            
+            // Po načtení regálu otevřeme detail GB
+            setTimeout(() => {
+                this.showGbDetail(targetGb);
+            }, 500);
+        } else {
+            console.warn(`⚠ GB #${gbNumber} nebyl nalezen`);
         }
     }
 }

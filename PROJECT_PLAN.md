@@ -91,6 +91,15 @@
   - **KOMPLETNÍ**: Pozice update funkcionalita s validací a stavovým managementem ✅
   - **KOMPLETNÍ**: Centralizovaný automatický refresh systém pro UX optimalizaci ✅
   - **KOMPLETNÍ**: Cross-browser kompatibilita a defensive programming pro Edge/Chrome ✅
+- **Phase 5 ČÁSTEČNĚ KOMPLETNÍ** - Dashboard s pokročilými analytics ⚠️ (6.8.2025)
+  - **KOMPLETNÍ**: Přehled blížících se expirací s filtry (7/14/30 dní) ✅
+  - **KOMPLETNÍ**: Barevné kódování expirací dle priority (kritická/blízká/normální) ✅
+  - **KOMPLETNÍ**: Navigace z expirujících položek do konkrétního GB ✅
+  - **KOMPLETNÍ**: Přeuspořádání sidebaru - expiry pod kritické sekce ✅
+  - **KOMPLETNÍ**: Hlavičkové záložky místo sidebar panelu pro maximální prostor ✅
+  - **KOMPLETNÍ**: Tmavý režim kompatibilní styling pro header tabs ✅
+  - **KOMPLETNÍ**: JavaScript integrace nových CSS tříd (.tab-button-header) ✅
+  - **PŘESKOČENO**: Komplexní analytické metriky (na uživatelské přání) ❌
 - [x] 3.5 Propojení s API pro CRUD operace ✅ (2.8.2025)
   - **KOMPLETNÍ**: Automatické načítání statistik při startu aplikace ✅
   - **KOMPLETNÍ**: Dashboard API integration do hlavičky ✅
@@ -118,20 +127,18 @@
 - **Phase 3.1-3.3 KOMPLETNĚ DOKONČENY** ✅ (6.8.2025)
 - **Phase 3.4-3.5 KOMPLETNĚ DOKONČENY** ✅ (2.8.2025)
 - **Phase 4 KOMPLETNĚ DOKONČENA** ✅ (6.8.2025) - Rozšířená vizualizace regálů s barevným kódováním
+- **Phase 5 ČÁSTEČNĚ DOKONČENA** ⚠️ (6.8.2025) - Expiry overview a UI optimalizace implementovány
 - **Phase 6 KOMPLETNĚ DOKONČENA** ✅ (2.8.2025) - Archivace a vyskladnění s Excel exportem
 - **Backend API 100% funkční** - všechny endpointy testovány s 95% úspěšností ✅
 - **Frontend CRUD systém kompletní** - modaly, formuláře, validace ✅
 - **Vyhledávací systém kompletní** - fulltext search, filtry, navigace ✅
 - **Automatické statistiky v hlavičce** - dashboard API integration (formát 13/115 GB) ✅
 - **Archivace systém plně funkční** - Excel export, důvody vyskladnění, kritické alerty ✅
+- **Header tab systém kompletní** - optimalizace layoutu pro maximální prostor ✅
 - **Připraveno k implementaci**: 
-  - Phase 5 (Dashboard s pokročilými analytics a grafy)
   - Phase 7 (Export aktuálních dat do PDF/Excel)
 
 ### 🚀 DOPORUČENÝ DALŠÍ KROK:
-**Phase 5 - Dashboard s pokročilými analytics** - Implementace komplexního dashboard systému s detailními statistikami, grafy a pokročilými metrikami skladu
-
-**ALTERNATIVNĚ:**
 **Phase 7 - Export aktuálních dat** - PDF/Excel export všech současných dat skladu s tiskovou funkcionalitou
 
 **HOTOVÉ MILNÍKY:**
@@ -143,6 +150,8 @@
 - ✅ **Kritické expirované položky** - automatické zobrazení v sidebaru
 - ✅ **Excel export fix** - bez artefaktů typu "Test položka |"
 - ✅ **Cross-tab navigace** - funkční přechod ze stromu vyhledávání do regálů
+- ✅ **Expiry tracking** - přehled blížících se expirací s 7/14/30-day filtry
+- ✅ **Header tab layout** - maximalizace prostoru přesunutím záložek do hlavičky
 
 ---
 
@@ -266,12 +275,12 @@ uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 - [x] 4.4 Tooltip informace ✅ (již implementováno v Phase 3)
 - [x] 4.5 Vizuální indikace pro expirující GB ✅ (6.8.2025)
 
-### FÁZE 5: DETAILNÍ POHLEDY (týden 5)
-- [ ] 5.1 Detail GB s položkami
-- [ ] 5.2 Editace GB a položek
-- [ ] 5.3 Vyskladňování (položka vs celý GB)
-- [ ] 5.4 Dashboard s kritickyími expiraci
-- [ ] 5.5 Statistiky a přehledy
+### FÁZE 5: DETAILNÍ POHLEDY (týden 5) ⚠️ ČÁSTEČNĚ DOKONČENO
+- [x] 5.1 Přehled blížících se expirací s filtry ✅ (6.8.2025)
+- [x] 5.2 Barevné kódování expirací dle priority ✅ (6.8.2025)
+- [x] 5.3 Navigace z expirací do konkrétních GB ✅ (6.8.2025)
+- [x] 5.4 UI optimalizace - header tabs místo sidebar ✅ (6.8.2025)
+- [ ] 5.5 Pokročilé analytické metriky (přeskočeno na uživatelské přání)
 
 ### FÁZE 6: ARCHIVACE A VYSKLADNĚNÍ (týden 6) ✅ KOMPLETNÍ
 - [x] 6.1 API pro archivaci položek ✅ (2.8.2025)

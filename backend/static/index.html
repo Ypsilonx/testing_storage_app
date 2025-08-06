@@ -27,9 +27,31 @@
     <header class="bg-white shadow-sm border-b border-gray-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center py-4">
-                <div class="flex items-center space-x-3">
-                    <i class="fas fa-warehouse text-blue-600 text-2xl"></i>
-                    <h1 class="text-2xl font-bold text-gray-900">Skladová aplikace</h1>
+                <div class="flex items-center space-x-8">
+                    <div class="flex items-center space-x-3">
+                        <i class="fas fa-warehouse text-blue-600 text-2xl"></i>
+                        <h1 class="text-2xl font-bold text-gray-900">Skladová aplikace</h1>
+                    </div>
+                    
+                    <!-- Záložky v headeru -->
+                    <nav class="flex space-x-6" aria-label="Tabs">
+                        <button 
+                            id="tab-regaly"
+                            class="tab-button-header flex items-center px-3 py-2 rounded-lg font-medium text-sm focus:outline-none tab-active transition-all"
+                            data-tab="regaly"
+                        >
+                            <i class="fas fa-th-large mr-2"></i>
+                            Regály
+                        </button>
+                        <button 
+                            id="tab-vyhledavani"
+                            class="tab-button-header flex items-center px-3 py-2 rounded-lg font-medium text-sm focus:outline-none tab-inactive transition-all"
+                            data-tab="vyhledavani"
+                        >
+                            <i class="fas fa-search mr-2"></i>
+                            Vyhledávání
+                        </button>
+                    </nav>
                 </div>
                 
                 <div class="flex items-center space-x-4">
@@ -67,49 +89,25 @@
     </header>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         
-        <!-- Tab Navigation -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
-            <div class="border-b border-gray-200">
-                <nav class="flex space-x-8 px-6" aria-label="Tabs">
-                    <button 
-                        id="tab-regaly"
-                        class="tab-button py-4 px-1 border-b-2 font-medium text-sm focus:outline-none tab-active"
-                        data-tab="regaly"
-                    >
-                        <i class="fas fa-th-large mr-2"></i>
-                        REGÁLY
-                    </button>
-                    <button 
-                        id="tab-vyhledavani"
-                        class="tab-button py-4 px-1 border-b-2 font-medium text-sm focus:outline-none tab-inactive"
-                        data-tab="vyhledavani"
-                    >
-                        <i class="fas fa-search mr-2"></i>
-                        VYHLEDÁVÁNÍ
-                    </button>
-                </nav>
-            </div>
-        </div>
-
         <!-- Tab Content Container -->
         <div id="tab-content-container">
             
             <!-- ZÁLOŽKA REGÁLY -->
             <div id="content-regaly" class="tab-content">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
                     
                     <!-- Levý panel - Seznam GB a akce -->
-                    <div class="lg:col-span-1 space-y-6">
+                    <div class="lg:col-span-1 space-y-4">
                         
                         <!-- Rychlé akce -->
-                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-3">
                                 <i class="fas fa-plus-circle text-green-500 mr-2"></i>
                                 Rychlé akce
                             </h3>
-                            <div class="space-y-3">
+                            <div class="space-y-2">
                                 <button 
                                     id="btn-new-gb" 
                                     class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
@@ -138,6 +136,32 @@
                                 <div class="text-gray-500 text-sm italic">Načítám...</div>
                             </div>
                         </div>
+
+                        <!-- Přehled blížících se expirací -->
+                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                                <i class="fas fa-calendar-exclamation text-orange-500 mr-2"></i>
+                                Blížící se expirace
+                            </h3>
+                            
+                            <!-- Časové filtry -->
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                <button id="expiry-7-btn" class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-medium hover:bg-red-200 transition-colors">
+                                    7 dní
+                                </button>
+                                <button id="expiry-14-btn" class="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-xs font-medium hover:bg-orange-200 transition-colors">
+                                    14 dní
+                                </button>
+                                <button id="expiry-30-btn" class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-medium hover:bg-yellow-200 transition-colors expiry-active">
+                                    30 dní
+                                </button>
+                            </div>
+                            
+                            <div id="expiring-list" class="space-y-2">
+                                <!-- Bude naplněno JS -->
+                                <div class="text-gray-500 text-sm italic">Načítám...</div>
+                            </div>
+                        </div>
                         
                         <!-- Naposledy zobrazené GB -->
                         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -153,7 +177,7 @@
                     </div>
                     
                     <!-- Pravý panel - Vizualizace regálů -->
-                    <div class="lg:col-span-2">
+                    <div class="lg:col-span-3">
                         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                             <div class="flex justify-between items-center mb-6">
                                 <h3 class="text-lg font-semibold text-gray-900">
@@ -210,10 +234,10 @@
             
             <!-- ZÁLOŽKA VYHLEDÁVÁNÍ -->
             <div id="content-vyhledavani" class="tab-content hidden">
-                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
                     
                     <!-- Levý panel - Filtry a stromová struktura (posunuto výše) -->
-                    <div class="lg:col-span-1 space-y-6">
+                    <div class="lg:col-span-1 space-y-4">
                         
                         <!-- Pokročilé filtry -->
                         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">

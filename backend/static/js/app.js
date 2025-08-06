@@ -115,7 +115,7 @@ class SkladovaApp {
      * Inicializace DOM elementů
      */
     initializeElements() {
-        this.tabButtons = document.querySelectorAll('.tab-button');
+        this.tabButtons = document.querySelectorAll('.tab-button-header');
         this.tabContents = {
             regaly: document.getElementById('content-regaly'),
             vyhledavani: document.getElementById('content-vyhledavani')
@@ -194,9 +194,13 @@ class SkladovaApp {
         // Aktualizace tlačítek
         this.tabButtons.forEach(button => {
             const isActive = button.dataset.tab === tabName;
-            button.className = button.className
-                .replace(/tab-(active|inactive)/g, '')
-                .trim() + (isActive ? ' tab-active' : ' tab-inactive');
+            if (isActive) {
+                button.classList.remove('tab-inactive');
+                button.classList.add('tab-active');
+            } else {
+                button.classList.remove('tab-active');
+                button.classList.add('tab-inactive');
+            }
         });
 
         // Skrytí všech obsahů
