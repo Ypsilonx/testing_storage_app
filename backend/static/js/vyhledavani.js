@@ -10,6 +10,7 @@ class VyhledavaniTab {
         this.locations = [];
         this.currentQuery = '';
         this.currentFilters = {};
+        this.expandedRows = new Set(); // Sledování rozbalených řádků
         
         this.initializeElements();
         this.attachEventListeners();
@@ -82,6 +83,8 @@ class VyhledavaniTab {
                 this.loadLocations(),
                 this.loadWarehouseTree()
             ]);
+            // Automaticky zobraz všechna data při načtení záložky
+            await this.performSearch();
         } catch (error) {
             console.error('Chyba při načítání dat pro vyhledávání:', error);
         }
@@ -278,6 +281,9 @@ class VyhledavaniTab {
      * Zobrazení výsledků vyhledávání
      */
     displaySearchResults(results) {
+        // Uložení výsledků pro rozbalování
+        this.searchResults = results;
+        
         if (results.length === 0) {
             this.searchResults.innerHTML = `
                 <div class="text-center py-12 text-gray-500">
@@ -290,7 +296,8 @@ class VyhledavaniTab {
         }
 
         // Vytvoření tabulky výsledků
-        this.searchResults.innerHTML = `
+        const searchResultsContainer = document.getElementById('search-results');
+        searchResultsContainer.innerHTML = `
             <div class="mb-4 text-sm text-gray-600">
                 Nalezeno <strong>${results.length}</strong> výsledků
             </div>
@@ -323,11 +330,13 @@ class VyhledavaniTab {
     createResultRow(gb) {
         const statusClass = getGbStatusClass(gb);
         const statusText = this.getStatusText(gb);
+        const isExpanded = this.expandedRows.has(gb.id);
         
         return `
-            <tr class="cursor-pointer hover:bg-gray-50" onclick="vyhledavaniTab.showGbDetail(${gb.id})">
+            <tr class="cursor-pointer hover:bg-gray-50 gb-row-${gb.id}" onclick="vyhledavaniTab.toggleGbExpansion(${gb.id})">
                 <td>
                     <div class="flex items-center">
+                        <i class="fas fa-chevron-${isExpanded ? 'down' : 'right'} text-gray-400 mr-2 transition-transform" id="chevron-${gb.id}"></i>
                         <div class="w-3 h-3 rounded-full ${statusClass} mr-2"></div>
                         <strong>#${gb.cislo_gb}</strong>
                     </div>
@@ -353,11 +362,11 @@ class VyhledavaniTab {
                 <td>
                     <div class="flex space-x-2">
                         <button 
-                            onclick="event.stopPropagation(); vyhledavaniTab.showGbDetail(${gb.id})"
+                            onclick="event.stopPropagation(); vyhledavaniTab.editGitterbox(${gb.id})"
                             class="text-blue-600 hover:text-blue-800 text-sm"
-                            title="Detail Gitterboxu"
+                            title="Editovat Gitterbox"
                         >
-                            <i class="fas fa-eye"></i>
+                            <i class="fas fa-edit"></i>
                         </button>
                         <button 
                             onclick="event.stopPropagation(); vyhledavaniTab.archiveGitterbox(${gb.id}, '${gb.cislo_gb}')"
@@ -369,6 +378,7 @@ class VyhledavaniTab {
                     </div>
                 </td>
             </tr>
+            ${isExpanded ? this.createExpandedRow(gb) : ''}
         `;
     }
 
@@ -399,6 +409,181 @@ class VyhledavaniTab {
             case 'aktivni': return 'bg-blue-100 text-blue-800';
             case 'plny': return 'bg-orange-100 text-orange-800';
             default: return 'bg-gray-100 text-gray-800';
+        }
+    }
+
+    /**
+     * Vytvoření rozbalené části řádku s položkami
+     */
+    createExpandedRow(gb) {
+        return `
+            <tr id="expanded-${gb.id}" class="expanded-row">
+                <td colspan="9" class="bg-gray-50 px-4 py-3">
+                    <div class="text-sm">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="font-medium text-gray-900">
+                                <i class="fas fa-boxes text-purple-500 mr-2"></i>
+                                Položky v GB #${gb.cislo_gb}
+                            </h4>
+                            <button 
+                                onclick="vyhledavaniTab.addItemToGb(${gb.id})"
+                                class="bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-1 rounded transition-colors"
+                                title="Přidat položku"
+                            >
+                                <i class="fas fa-plus mr-1"></i>
+                                Přidat položku
+                            </button>
+                        </div>
+                        <div id="gb-items-${gb.id}" class="space-y-2">
+                            <div class="text-gray-500 italic">Načítám položky...</div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+
+    /**
+     * Rozbalení/sbalení řádku GB
+     */
+    async toggleGbExpansion(gbId) {
+        const isExpanded = this.expandedRows.has(gbId);
+        
+        if (isExpanded) {
+            // Sbalit
+            this.expandedRows.delete(gbId);
+            const expandedRow = document.getElementById(`expanded-${gbId}`);
+            if (expandedRow) {
+                expandedRow.remove();
+            }
+            // Změnit ikonu
+            const chevron = document.getElementById(`chevron-${gbId}`);
+            if (chevron) {
+                chevron.className = chevron.className.replace('fa-chevron-down', 'fa-chevron-right');
+            }
+        } else {
+            // Rozbalit
+            this.expandedRows.add(gbId);
+            const gbRow = document.querySelector(`.gb-row-${gbId}`);
+            if (gbRow) {
+                const gb = this.searchResults.find(g => g.id === gbId);
+                if (gb) {
+                    gbRow.insertAdjacentHTML('afterend', this.createExpandedRow(gb));
+                    // Načíst položky
+                    await this.loadGbItems(gbId);
+                }
+            }
+            // Změnit ikonu
+            const chevron = document.getElementById(`chevron-${gbId}`);
+            if (chevron) {
+                chevron.className = chevron.className.replace('fa-chevron-right', 'fa-chevron-down');
+            }
+        }
+    }
+
+    /**
+     * Načtení položek pro GB
+     */
+    async loadGbItems(gbId) {
+        try {
+            const itemsResponse = await API.getGitterboxItems(gbId);
+            const itemsContainer = document.getElementById(`gb-items-${gbId}`);
+            
+            if (!itemsContainer) return;
+            
+            if (itemsResponse.data.polozky.length === 0) {
+                itemsContainer.innerHTML = '<div class="text-gray-500 italic">Žádné položky</div>';
+                return;
+            }
+            
+            itemsContainer.innerHTML = itemsResponse.data.polozky.map(item => `
+                <div class="flex items-center justify-between p-2 bg-white rounded border">
+                    <div class="flex-1">
+                        <div class="font-medium">${escapeHtml(item.nazev_dilu)}</div>
+                        <div class="text-xs text-gray-600">
+                            ${item.tma_cislo ? `TMA: ${escapeHtml(item.tma_cislo)} • ` : ''}
+                            ${item.projekt ? `Projekt: ${escapeHtml(item.projekt)} • ` : ''}
+                            Množství: ${escapeHtml(item.popis_mnozstvi)}
+                            ${item.expiracni_datum ? ` • Expira: ${formatDate(item.expiracni_datum)}` : ''}
+                        </div>
+                    </div>
+                    <div class="flex space-x-1">
+                        <button 
+                            onclick="vyhledavaniTab.editItem(${item.id})"
+                            class="text-blue-600 hover:text-blue-800 text-xs p-1"
+                            title="Editovat položku"
+                        >
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button 
+                            onclick="vyhledavaniTab.archiveItem(${item.id}, '${escapeHtml(item.nazev_dilu)}')"
+                            class="text-red-600 hover:text-red-800 text-xs p-1"
+                            title="Vyskladnit položku"
+                        >
+                            <i class="fas fa-archive"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            
+        } catch (error) {
+            console.error('Chyba při načítání položek:', error);
+            const itemsContainer = document.getElementById(`gb-items-${gbId}`);
+            if (itemsContainer) {
+                itemsContainer.innerHTML = '<div class="text-red-500 text-sm">Chyba při načítání položek</div>';
+            }
+        }
+    }
+
+    /**
+     * Editace Gitterboxu
+     */
+    editGitterbox(gbId) {
+        // Pro teď jednoduchá implementace - později modal
+        if (window.gbModal) {
+            window.gbModal.openForEdit(gbId);
+        } else {
+            alert(`Editace GB bude implementována v další fázi (GB ID: ${gbId})`);
+        }
+    }
+
+    /**
+     * Přidání položky do GB
+     */
+    addItemToGb(gbId) {
+        // Pro teď jednoduchá implementace - později modal
+        if (window.itemModal) {
+            window.itemModal.openForGb(gbId);
+        } else {
+            alert(`Přidání položky bude implementováno v další fázi (GB ID: ${gbId})`);
+        }
+    }
+
+    /**
+     * Editace položky
+     */
+    editItem(itemId) {
+        // Pro teď jednoduchá implementace - později modal
+        if (window.itemModal) {
+            window.itemModal.openForEdit(itemId);
+        } else {
+            alert(`Editace položky bude implementována v další fázi (Item ID: ${itemId})`);
+        }
+    }
+
+    /**
+     * Archivace/vyskladnění položky
+     */
+    archiveItem(itemId, itemName) {
+        if (window.archiveModal) {
+            window.archiveModal.openForItem(itemId, itemName);
+        } else {
+            const confirmed = confirm(`Opravdu chcete vyskladnit položku "${itemName}"?`);
+            if (confirmed) {
+                console.log('Archivace položky:', itemId);
+                // Zde by byla implementace archivace
+                alert('Archivace položky bude implementována v další fázi');
+            }
         }
     }
 
@@ -441,7 +626,7 @@ ${gbData.polozky.map(item => {
     /**
      * Vymazání vyhledávání
      */
-    clearSearch() {
+    async clearSearch() {
         this.searchInput.value = '';
         this.filterLocation.value = '';
         this.filterStatus.value = '';
@@ -449,14 +634,10 @@ ${gbData.polozky.map(item => {
         
         this.currentQuery = '';
         this.currentFilters = {};
+        this.expandedRows.clear(); // Sbalit všechny řádky
         
-        this.searchResults.innerHTML = `
-            <div class="text-center py-12 text-gray-500">
-                <i class="fas fa-search text-4xl mb-4 text-gray-300"></i>
-                <p class="text-lg">Zadejte vyhledávací dotaz</p>
-                <p class="text-sm">Můžete hledat podle GB čísla, TMA, projektu, názvu dílu nebo zodpovědné osoby</p>
-            </div>
-        `;
+        // Znovu načíst všechna data
+        await this.performSearch();
     }
 
     /**
@@ -508,9 +689,21 @@ ${gbData.polozky.map(item => {
      * Refresh dat
      */
     async refresh() {
+        const wasExpanded = new Set(this.expandedRows); // Zapamatuj rozbalené řádky
+        this.expandedRows.clear();
+        
         await this.loadInitialData();
+        
+        // Pokud jsou stále stejné filtry, obnov rozbalené řádky
         if (this.currentQuery || Object.values(this.currentFilters).some(v => v)) {
-            await this.performSearch();
+            setTimeout(() => {
+                wasExpanded.forEach(gbId => {
+                    const gbRow = document.querySelector(`.gb-row-${gbId}`);
+                    if (gbRow) {
+                        this.toggleGbExpansion(gbId);
+                    }
+                });
+            }, 100);
         }
     }
 

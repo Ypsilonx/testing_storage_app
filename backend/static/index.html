@@ -212,38 +212,8 @@
             <div id="content-vyhledavani" class="tab-content hidden">
                 <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
                     
-                    <!-- Levý panel - Vyhledávání a filtry -->
+                    <!-- Levý panel - Filtry a stromová struktura (posunuto výše) -->
                     <div class="lg:col-span-1 space-y-6">
-                        
-                        <!-- Vyhledávací pole -->
-                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-4">
-                                <i class="fas fa-search text-blue-500 mr-2"></i>
-                                Fulltext vyhledávání
-                            </h3>
-                            <div class="space-y-3">
-                                <input 
-                                    type="text" 
-                                    id="search-input" 
-                                    placeholder="Hledej GB, TMA, projekt, díl..."
-                                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                >
-                                <button 
-                                    id="search-btn"
-                                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-                                >
-                                    <i class="fas fa-search mr-2"></i>
-                                    Vyhledat
-                                </button>
-                                <button 
-                                    id="clear-search-btn"
-                                    class="w-full bg-gray-300 hover:bg-gray-400 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors"
-                                >
-                                    <i class="fas fa-times mr-2"></i>
-                                    Vymazat
-                                </button>
-                            </div>
-                        </div>
                         
                         <!-- Pokročilé filtry -->
                         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -294,6 +264,36 @@
                     
                     <!-- Pravý panel - Výsledky vyhledávání -->
                     <div class="lg:col-span-3">
+                        <!-- Vyhledávací pole -->
+                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                                <i class="fas fa-search text-blue-500 mr-2"></i>
+                                Fulltext vyhledávání
+                            </h3>
+                            <div class="flex space-x-3">
+                                <input 
+                                    type="text" 
+                                    id="search-input" 
+                                    placeholder="Hledej GB, TMA, projekt, díl..."
+                                    class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                <button 
+                                    id="search-btn"
+                                    class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition-colors"
+                                >
+                                    <i class="fas fa-search mr-2"></i>
+                                    Vyhledat
+                                </button>
+                                <button 
+                                    id="clear-search-btn"
+                                    class="bg-gray-300 hover:bg-gray-400 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors"
+                                >
+                                    <i class="fas fa-times mr-2"></i>
+                                    Vymazat
+                                </button>
+                            </div>
+                        </div>
+                        
                         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                             <div class="flex justify-between items-center mb-6">
                                 <h3 class="text-lg font-semibold text-gray-900">

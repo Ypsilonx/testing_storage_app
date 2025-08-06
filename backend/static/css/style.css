@@ -378,6 +378,52 @@ body {
     background: #a8a8a8;
 }
 
+/* Rozbalené řádky v search results - tmavý režim */
+.expanded-row {
+    background-color: #1f2937 !important; /* Tmavší pozadí */
+    border-top: 2px solid #374151 !important; /* Tmavší ohraničení */
+}
+
+.expanded-row td {
+    background-color: #1f2937 !important;
+    color: #e0e0e0 !important; /* Světlé písmo */
+}
+
+.expanded-row:hover td {
+    background-color: #1f2937 !important;
+    color: #e0e0e0 !important;
+}
+
+/* Položky v rozbalených řádcích */
+.expanded-row .bg-white {
+    background-color: #374151 !important; /* Tmavé pozadí pro položky */
+    color: #e0e0e0 !important; /* Světlé písmo */
+    border-color: #4b5563 !important; /* Tmavší okraje */
+}
+
+/* Text v rozbalených řádcích */
+.expanded-row .text-gray-900 {
+    color: #e0e0e0 !important;
+}
+
+.expanded-row .text-gray-600 {
+    color: #9ca3af !important;
+}
+
+.expanded-row .text-gray-500 {
+    color: #6b7280 !important;
+}
+
+/* Chevron animace */
+.fa-chevron-right, .fa-chevron-down {
+    transition: transform 0.2s ease;
+}
+
+/* GB row hover efekt */
+.gb-row-main:hover {
+    background-color: #374151 !important;
+}
+
 /* Print styles */
 @media print {
     .no-print {
