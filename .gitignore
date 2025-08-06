@@ -86,3 +86,5 @@ logs/
 # Temporary files
 tmp/
 temp/
+
+*.xlsx
