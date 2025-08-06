@@ -55,7 +55,25 @@
   - **KOMPLETNÍ**: Responzivní šířka regálů - užší regály pro méně sloupců ✅
   - **KOMPLETNÍ**: Konzistentní označování pozic - warehouse standard (řádek-sloupec) ✅
   - **KOMPLETNÍ**: Oprava tooltip duplikace - jediný CSS tooltip systém ✅
-- **Phase 3.4 KOMPLETNÍ** - CRUD formuláře pro praktickou správu
+- **Phase 3.3 KOMPLETNÍ** - Pokročilé vyhledávání a filtry ✅ (6.8.2025)
+  - **KOMPLETNÍ**: Vizuální úpravy layoutu - search pole pouze nahoře ✅
+  - **KOMPLETNÍ**: Rozbalovací řádky GB s detaily položek ✅
+  - **KOMPLETNÍ**: Cache systém pro optimalizaci API volání ✅
+  - **KOMPLETNÍ**: Dropdown filtry - projekt a zodpovědná osoba ✅
+  - **KOMPLETNÍ**: Modal integrace - edit/archive pro GB i položky ✅
+  - **KOMPLETNÍ**: Stromová struktura navigace mezi záložkami ✅
+  - **KOMPLETNÍ**: Cross-tab navigace ze vyhledávání do regálů ✅
+  - **KOMPLETNÍ**: Responsive design s dark mode podporou ✅
+- **Phase 4 KOMPLETNÍ** - Rozšířená vizualizace regálů ✅ (6.8.2025)
+  - **KOMPLETNÍ**: Jednoduché barevné kódování pozic podle stavu GB ✅
+  - **KOMPLETNÍ**: Prázdné pozice - průhledný vnitřek, šedý rámeček, šedé písmo ✅
+  - **KOMPLETNÍ**: Plný GB (100%) - tmavě modrý vnitřek, světle modrý rámeček, bílé písmo ✅
+  - **KOMPLETNÍ**: Neúplný GB (<100%) - tmavě oranžový vnitřek, světle oranžový rámeček, bílé písmo ✅
+  - **KOMPLETNÍ**: Expirující GB - barva dle naplněnosti + blikající červený rámeček ✅
+  - **KOMPLETNÍ**: Aktualizovaná legenda s vizuálními ukázkami všech stavů ✅
+  - **KOMPLETNÍ**: CSS animace border-blink pro expirující položky ✅
+  - **KOMPLETNÍ**: Zvýšená CSS specificita pro override Tailwind tříd ✅
+  - **KOMPLETNÍ**: Optimalizace pro dark mode s vysokým kontrastem ✅
   - **KOMPLETNÍ**: Modal systém s loading states a error handling ✅
   - **KOMPLETNÍ**: Formulář pro vytvoření nového Gitterboxu s výběrem pozice ✅
   - **KOMPLETNÍ**: Uživatelský výběr čísla GB místo automatického přiřazování ✅
@@ -97,29 +115,34 @@
 
 ### 🎯 AKTUÁLNĚ:
 - **Phase 2 KOMPLETNĚ DOKONČENA** ✅ (2.8.2025)
-- **Phase 3.1-3.5 KOMPLETNĚ DOKONČENY** ✅ (2.8.2025)
+- **Phase 3.1-3.3 KOMPLETNĚ DOKONČENY** ✅ (6.8.2025)
+- **Phase 3.4-3.5 KOMPLETNĚ DOKONČENY** ✅ (2.8.2025)
+- **Phase 4 KOMPLETNĚ DOKONČENA** ✅ (6.8.2025) - Rozšířená vizualizace regálů s barevným kódováním
 - **Phase 6 KOMPLETNĚ DOKONČENA** ✅ (2.8.2025) - Archivace a vyskladnění s Excel exportem
 - **Backend API 100% funkční** - všechny endpointy testovány s 95% úspěšností ✅
 - **Frontend CRUD systém kompletní** - modaly, formuláře, validace ✅
+- **Vyhledávací systém kompletní** - fulltext search, filtry, navigace ✅
 - **Automatické statistiky v hlavičce** - dashboard API integration (formát 13/115 GB) ✅
 - **Archivace systém plně funkční** - Excel export, důvody vyskladnění, kritické alerty ✅
 - **Připraveno k implementaci**: 
-  - Phase 3.3 (Pokročilé JavaScript funkce - fulltext search, filtrování)
-  - Phase 4 (Rozšířená vizualizace regálů - barevné kódování, šrafování)
-  - Phase 5 (Dashboard s pokročilými analytics)
+  - Phase 5 (Dashboard s pokročilými analytics a grafy)
+  - Phase 7 (Export aktuálních dat do PDF/Excel)
 
 ### 🚀 DOPORUČENÝ DALŠÍ KROK:
-**Phase 3.3 - Pokročilé JavaScript funkce** - Implementace fulltext vyhledávání, pokročilého filtrování a rozšíření interaktivních funkcí v záložce Vyhledávání
+**Phase 5 - Dashboard s pokročilými analytics** - Implementace komplexního dashboard systému s detailními statistikami, grafy a pokročilými metrikami skladu
 
 **ALTERNATIVNĚ:**
-**Phase 4 - Rozšířená vizualizace regálů** - Barevné kódování, šrafování naplněnosti, lepší tooltips a interaktivní prvky
+**Phase 7 - Export aktuálních dat** - PDF/Excel export všech současných dat skladu s tiskovou funkcionalitou
 
 **HOTOVÉ MILNÍKY:**
+- ✅ **Vyhledávací systém** - kompletní fulltext search s filtry a cross-tab navigací
 - ✅ **Archivace systém** - kompletní wyskladnění s Excel exportem a statistikami
 - ✅ **Dashboard integrace** - statistiky 13/115 GB formát v hlavičce  
+- ✅ **Barevné kódování regálů** - kompletní vizualizace s intuitivním barevným schématem
 - ✅ **Breadcrumb navigace** - orientace v GB detail modalech
 - ✅ **Kritické expirované položky** - automatické zobrazení v sidebaru
 - ✅ **Excel export fix** - bez artefaktů typu "Test položka |"
+- ✅ **Cross-tab navigace** - funkční přechod ze stromu vyhledávání do regálů
 
 ---
 
@@ -140,7 +163,8 @@
 - [x] ✅ CSS tooltip systém - oprava duplikace, jediný funkční systém
 - [x] ✅ Dvě hlavní záložky: REGÁLY + VYHLEDÁVÁNÍ (základní struktura)
 - [x] ✅ Interaktivní vizuální regály s klikacími pozicemi
-- [ ] 🔄 Fulltext vyhledávání se stromovou strukturou
+- [x] ✅ Fulltext vyhledávání se stromovou strukturou a pokročilými filtry
+- [x] ✅ Cross-tab navigace - propojení mezi záložkami regály a vyhledávání
 - [ ] 🔄 Export aktuálních dat do PDF/Excel
 
 ---
@@ -190,7 +214,13 @@
   - **KOMPLETNÍ**: Responzivní šířka regálů - užší regály pro méně sloupců ✅
   - **KOMPLETNÍ**: Konzistentní označování pozic - warehouse standard (řádek-sloupec) ✅
   - **KOMPLETNÍ**: Oprava tooltip duplikace - jediný CSS tooltip systém ✅
-- [ ] 3.3 JavaScript pro pokročilé interaktivity (připraveno k implementaci)
+- [x] 3.3 Pokročilé vyhledávání a filtry ✅ (6.8.2025)
+  - **KOMPLETNÍ**: Fulltext vyhledávání s rozbalovacími řádky GB ✅
+  - **KOMPLETNÍ**: Cache systém pro optimalizaci výkonu ✅
+  - **KOMPLETNÍ**: Dropdown filtry - projekt a zodpovědná osoba ✅
+  - **KOMPLETNÍ**: Modal integrace pro všechny CRUD operace ✅
+  - **KOMPLETNÍ**: Cross-tab navigace mezi regály a vyhledáváním ✅
+  - **KOMPLETNÍ**: Stromová struktura s funkcionalitou ✅
 - [x] 3.4 CRUD formuláře pro praktickou správu ✅ (27.7.2025)
   - **KOMPLETNÍ**: Modal systém s loading states a error handling ✅
   - **KOMPLETNÍ**: Formulář pro vytvoření nového Gitterboxu ✅
@@ -229,12 +259,12 @@ uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 - **API Docs**: http://localhost:8000/api/docs
 - **Reload**: Automatický při změnách
 
-### FÁZE 4: VIZUALIZACE REGÁLŮ (týden 4)
-- [ ] 4.1 Generování regálových mřížek
-- [ ] 4.2 Barevné kódování pozic
-- [ ] 4.3 Interaktivní klikání na pozice
-- [ ] 4.4 Tooltip informace
-- [ ] 4.5 Šrafování pro neúplně naplněné GB
+### FÁZE 4: VIZUALIZACE REGÁLŮ (týden 4) ✅ KOMPLETNÍ
+- [x] 4.1 Generování regálových mřížek ✅ (6.8.2025)
+- [x] 4.2 Barevné kódování pozic ✅ (6.8.2025)
+- [x] 4.3 Interaktivní klikání na pozice ✅ (již implementováno v Phase 3)
+- [x] 4.4 Tooltip informace ✅ (již implementováno v Phase 3)
+- [x] 4.5 Vizuální indikace pro expirující GB ✅ (6.8.2025)
 
 ### FÁZE 5: DETAILNÍ POHLEDY (týden 5)
 - [ ] 5.1 Detail GB s položkami
@@ -426,7 +456,8 @@ poznamka TEXT
 - [x] Formuláře validované ✅
 - [x] Archivace integrace hotova ✅
 - [x] Responsivní design ✅
-- [ ] Fulltext vyhledávání implementováno
+- [x] Fulltext vyhledávání implementováno ✅
+- [x] Cross-tab navigace funkční ✅
 - [ ] Export aktuálních dat do PDF/Excel
 
 ### Aplikace připravená k nasazení když:
@@ -449,5 +480,6 @@ poznamka TEXT
 ---
 
 *Plán vytvořen: 27.7.2025*  
+*Poslední aktualizace: 6.8.2025*  
 *Odhadovaná doba dokončení: 8 týdnů*  
-*Verze: 1.0*
+*Verze: 1.3*
