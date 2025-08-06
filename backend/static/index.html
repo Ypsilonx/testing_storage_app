@@ -174,6 +174,24 @@
                                 <div class="text-gray-500 text-sm italic">Zatím žádné...</div>
                             </div>
                         </div>
+
+                        <!-- Správa systému -->
+                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-3">
+                                <i class="fas fa-cogs text-blue-500 mr-2"></i>
+                                Správa systému
+                            </h3>
+                            <div class="space-y-2">
+                                <button 
+                                    id="btn-manage-shelves" 
+                                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                                    onclick="window.app?.switchTab('admin')"
+                                >
+                                    <i class="fas fa-edit mr-2"></i>
+                                    Upravit regály
+                                </button>
+                            </div>
+                        </div>
                     </div>
                     
                     <!-- Pravý panel - Vizualizace regálů -->
@@ -360,6 +378,41 @@
                 </div>
             </div>
         </div>
+
+        <!-- ===== TAB: SPRÁVA REGÁLŮ ===== -->
+        <div id="content-admin" class="tab-content hidden">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div class="bg-white rounded-xl shadow-lg">
+                    <!-- Header -->
+                    <div class="p-6 border-b border-gray-200">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h2 class="text-2xl font-bold text-gray-900 flex items-center">
+                                    <i class="fas fa-cogs text-blue-500 mr-3"></i>
+                                    Správa regálů
+                                </h2>
+                                <p class="text-gray-600 mt-1">Úprava velikostí regálů a změna názvů</p>
+                            </div>
+                            <button id="btn-create-shelf" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+                                <i class="fas fa-plus mr-2"></i>
+                                Nový regál
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Shelves List -->
+                    <div class="p-6">
+                        <div id="shelves-list">
+                            <!-- Shelves will be loaded here -->
+                            <div class="text-center py-12 text-gray-500">
+                                <i class="fas fa-spinner fa-spin text-4xl mb-4 text-gray-300"></i>
+                                <p class="text-lg">Načítám regály...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
 
     <!-- Modals Container -->
@@ -381,5 +434,6 @@
     <script src="/static/js/modals.js"></script>
     <script src="/static/js/regaly.js"></script>
     <script src="/static/js/vyhledavani.js"></script>
+    <script src="/static/js/admin.js"></script>
 </body>
 </html>

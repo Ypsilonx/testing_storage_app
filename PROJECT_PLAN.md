@@ -132,6 +132,17 @@
   - **KOMPLETNÍ**: Aplikace všech filtrů (osoba, projekt, lokace, dotaz, stav) ✅
   - **KOMPLETNÍ**: Graceful fallback pro chybějící Unicode fonty ✅
   - **KOMPLETNÍ**: Auto-šířka Excel sloupců a styling ✅
+- **Phase 8 KOMPLETNÍ** - Správa regálů ✅ (6.8.2025)
+  - **KOMPLETNÍ**: API router `/api/shelves/` s kompletním CRUD systémem ✅
+  - **KOMPLETNÍ**: Backend validace změn velikosti regálů s ochranou dat ✅
+  - **KOMPLETNÍ**: Admin frontend záložka s modal-based editací ✅
+  - **KOMPLETNÍ**: Automatická regenerace pozic při změnách rozměrů regálů ✅
+  - **KOMPLETNÍ**: Ochrana obsazených pozic před změnou velikosti regálu ✅
+  - **KOMPLETNÍ**: Modal Manager s fallback systémem pro spolehlivost ✅
+  - **KOMPLETNÍ**: UI optimalizace - přesunutí správy regálů do levého sidebaru ✅
+  - **KOMPLETNÍ**: Sekce "Správa systému" pro administrativní funkce ✅
+  - **KOMPLETNÍ**: JavaScript integrace nového tlačítka s event handlery ✅
+  - **KOMPLETNÍ**: Responsivní admin formuláře s validací ✅
 
 ### 🎯 AKTUÁLNĚ:
 - **Phase 2 KOMPLETNĚ DOKONČENA** ✅ (2.8.2025)
@@ -141,6 +152,7 @@
 - **Phase 5 ČÁSTEČNĚ DOKONČENA** ⚠️ (6.8.2025) - Expiry overview a UI optimalizace implementovány
 - **Phase 6 KOMPLETNĚ DOKONČENA** ✅ (2.8.2025) - Archivace a vyskladnění s Excel exportem
 - **Phase 7 KOMPLETNĚ DOKONČENA** ✅ (6.8.2025) - Export aktuálních dat do PDF/Excel
+- **Phase 8 KOMPLETNĚ DOKONČENA** ✅ (6.8.2025) - Správa regálů s ochranou dat a UI optimalizací
 - **Backend API 100% funkční** - všechny endpointy testovány s 95% úspěšností ✅
 - **Frontend CRUD systém kompletní** - modaly, formuláře, validace ✅
 - **Vyhledávací systém kompletní** - fulltext search, filtry, navigace ✅
@@ -148,16 +160,17 @@
 - **Automatické statistiky v hlavičce** - dashboard API integration (formát 13/115 GB) ✅
 - **Archivace systém plně funkční** - Excel export, důvody vyskladnění, kritické alerty ✅
 - **Header tab systém kompletní** - optimalizace layoutu pro maximální prostor ✅
+- **Správa regálů systém kompletní** - resize/rename s ochranou dat, admin UI v sidebaru ✅
 
 ### 🚀 MOŽNÉ DALŠÍ KROKY:
-**Option A - Phase 8: Pokročilé funkce** - Notifikace, automatizace, bulk operace
-**Option B - Phase 9: Analytics & Reporting** - Grafy, trendy, predikce
-**Option C - Phase 10: Integrace** - Email notifikace, API webhooks, QR kódy
-**Option D - Phase 11: Mobile** - Responsive optimalizace pro tablety/mobily
+**Option A - Phase 9: Pokročilé funkce** - Notifikace, automatizace, bulk operace
+**Option B - Phase 10: Analytics & Reporting** - Grafy, trendy, predikce
+**Option C - Phase 11: Integrace** - Email notifikace, API webhooks, QR kódy
+**Option D - Phase 12: Mobile** - Responsive optimalizace pro tablety/mobily
 **Option E - Deployment & Production** - Docker, PostgreSQL, backup systémy
 
 ### 🚀 DOPORUČENÝ DALŠÍ KROK:
-**Phase 7 - Export aktuálních dat** - PDF/Excel export všech současných dat skladu s tiskovou funkcionalitou
+**Phase 9 - Pokročilé funkce** - Notifikace, bulk operace, template systém, audit log
 
 **HOTOVÉ MILNÍKY:**
 - ✅ **Vyhledávací systém** - kompletní fulltext search s filtry a cross-tab navigací
@@ -171,50 +184,51 @@
 - ✅ **Expiry tracking** - přehled blížících se expirací s 7/14/30-day filtry
 - ✅ **Header tab layout** - maximalizace prostoru přesunutím záložek do hlavičky
 - ✅ **Export systém** - PDF a Excel export s českou podporou a inteligentními názvy
+- ✅ **Správa regálů** - kompletní CRUD s ochranou dat a UI v sidebaru
 
 ---
 
 ## 🎯 NÁVRHY DALŠÍCH FÁZÍ ROZVOJE
 
-### 🔔 PHASE 8: POKROČILÉ FUNKCE (týden 8)
+### 🔔 PHASE 9: POKROČILÉ FUNKCE (týden 9)
 **Cíl:** Automatizace a bulk operace pro efektivnější práci
-- **8.1 Email notifikace expirací** - Automatické weekly/monthly emaily s blížícími se expirací
-- **8.2 Bulk operace** - Hromadné úpravy GB (změna zodpovědné osoby, přesun pozic)
-- **8.3 QR kódy pro GB** - Generování a tisk QR kódů pro rychlé vyhledání
-- **8.4 Template systém** - Uložené šablony pro rychlé vytváření podobných GB
-- **8.5 Audit log** - Sledování všech změn s timestampy a uživateli
+- **9.1 Email notifikace expirací** - Automatické weekly/monthly emaily s blížícími se expirací
+- **9.2 Bulk operace** - Hromadné úpravy GB (změna zodpovědné osoby, přesun pozic)
+- **9.3 QR kódy pro GB** - Generování a tisk QR kódů pro rychlé vyhledání
+- **9.4 Template systém** - Uložené šablony pro rychlé vytváření podobných GB
+- **9.5 Audit log** - Sledování všech změn s timestampy a uživateli
 
-### 📊 PHASE 9: ANALYTICS & REPORTING (týden 9) 
+### 📊 PHASE 10: ANALYTICS & REPORTING (týden 10) 
 **Cíl:** Pokročilé analytiky a business intelligence
-- **9.1 Dashboard grafy** - Charts.js implementace s trendy obsazenosti
-- **9.2 Predikce expirací** - ML algoritmy pro odhad budoucích expirací
-- **9.3 Skladové KPIs** - Metriky efektivity, turnover rate, space utilization
-- **9.4 Historické trendy** - Grafy vývoje obsazenosti v čase
-- **9.5 Custom reporty** - Uživatelsky konfigurovatelné sestavy
+- **10.1 Dashboard grafy** - Charts.js implementace s trendy obsazenosti
+- **10.2 Predikce expirací** - ML algoritmy pro odhad budoucích expirací
+- **10.3 Skladové KPIs** - Metriky efektivity, turnover rate, space utilization
+- **10.4 Historické trendy** - Grafy vývoje obsazenosti v čase
+- **10.5 Custom reporty** - Uživatelsky konfigurovatelné sestavy
 
-### 🔗 PHASE 10: INTEGRACE & API (týden 10)
+### 🔗 PHASE 11: INTEGRACE & API (týden 11)
 **Cíl:** Propojení s externími systémy
-- **10.1 REST API pro třetí strany** - Kompletní API dokumentace s autentifikací
-- **10.2 Webhook systém** - Notifikace při změnách do externích systémů
-- **10.3 Barcode scanner integrace** - Web-based čtečka čárových kódů
-- **10.4 CSV/XML import** - Hromadný import dat z jiných systémů
-- **10.5 LDAP/AD integrace** - Firemní autentifikace a role managament
+- **11.1 REST API pro třetí strany** - Kompletní API dokumentace s autentifikací
+- **11.2 Webhook systém** - Notifikace při změnách do externích systémů
+- **11.3 Barcode scanner integrace** - Web-based čtečka čárových kódů
+- **11.4 CSV/XML import** - Hromadný import dat z jiných systémů
+- **11.5 LDAP/AD integrace** - Firemní autentifikace a role managament
 
-### 📱 PHASE 11: MOBILE & PWA (týden 11)
+### 📱 PHASE 12: MOBILE & PWA (týden 12)
 **Cíl:** Mobilní přístup a offline funkcionalita  
-- **11.1 PWA implementace** - Service workers a offline cache
-- **11.2 Mobile-first UI** - Dotykové ovládání a responsive optimalizace
-- **11.3 Kamerové QR skenování** - WebRTC API pro mobilní kamery
-- **11.4 GPS tracking** - Lokalizace pro fieldwork a inventury
-- **11.5 Push notifikace** - Mobilní alerty pro kritické expirace
+- **12.1 PWA implementace** - Service workers a offline cache
+- **12.2 Mobile-first UI** - Dotykové ovládání a responsive optimalizace
+- **12.3 Kamerové QR skenování** - WebRTC API pro mobilní kamery
+- **12.4 GPS tracking** - Lokalizace pro fieldwork a inventury
+- **12.5 Push notifikace** - Mobilní alerty pro kritické expirace
 
-### 🏗️ PHASE 12: PRODUCTION & DEPLOYMENT (týden 12)
+### 🏗️ PHASE 13: PRODUCTION & DEPLOYMENT (týden 13)
 **Cíl:** Produkční nasazení a škálovatelnost
-- **12.1 Docker kontejnerizace** - Multi-stage builds a compose orchestrace  
-- **12.2 PostgreSQL migrace** - Přechod z SQLite na produkční DB
-- **12.3 Nginx reverse proxy** - Load balancing a SSL terminace
-- **12.4 Automated backup** - Denní zálohy s retention policies  
-- **12.5 Monitoring & logging** - Prometheus, Grafana, ELK stack
+- **13.1 Docker kontejnerizace** - Multi-stage builds a compose orchestrace  
+- **13.2 PostgreSQL migrace** - Přechod z SQLite na produkční DB
+- **13.3 Nginx reverse proxy** - Load balancing a SSL terminace
+- **13.4 Automated backup** - Denní zálohy s retention policies  
+- **13.5 Monitoring & logging** - Prometheus, Grafana, ELK stack
 
 ---
 
@@ -359,12 +373,12 @@ uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 - [x] 7.4 Inteligentní názvy souborů dle filtrů ✅ (6.8.2025)
 - [x] 7.5 Frontend integrace exportů ✅ (6.8.2025)
 
-### FÁZE 8: FINALIZACE (týden 8)
-- [ ] 8.1 Optimalizace výkonu
-- [ ] 8.2 Error handling a validace
-- [ ] 8.3 Dokumentace uživatele
-- [ ] 8.4 Deployment setup
-- [ ] 8.5 Testování a bugfixy
+### FÁZE 8: FINALIZACE (týden 8) ✅ KOMPLETNÍ
+- [x] 8.1 Správa regálů API implementace ✅ (6.8.2025)
+- [x] 8.2 Admin UI s modal editací ✅ (6.8.2025)
+- [x] 8.3 Ochrana dat při změnách velikosti ✅ (6.8.2025)
+- [x] 8.4 UI optimalizace - sidebar admin sekce ✅ (6.8.2025)
+- [x] 8.5 JavaScript integrace a event handling ✅ (6.8.2025)
 
 ---
 
@@ -552,6 +566,6 @@ poznamka TEXT
 ---
 
 *Plán vytvořen: 27.7.2025*  
-*Poslední aktualizace: 6.8.2025*  
-*Odhadovaná doba dokončení: 8 týdnů*  
-*Verze: 1.3*
+*Poslední aktualizace: 6.8.2025 - Phase 8 dokončena*  
+*Odhadovaná doba dokončení: 13 týdnů*  
+*Verze: 1.4*

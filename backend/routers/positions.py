@@ -180,3 +180,43 @@ async def get_position(position_id: int, db: Session = Depends(get_database)):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Chyba při načítání pozice: {str(e)}")
+
+@router.get("/shelves/{shelf_id}/positions")
+async def get_shelf_positions(shelf_id: int, db: Session = Depends(get_database)):
+    """Získání všech pozic konkrétního regálu"""
+    try:
+        # Ověř že regál existuje
+        shelf = db.query(Shelf).filter(Shelf.id == shelf_id).first()
+        if not shelf:
+            raise HTTPException(status_code=404, detail="Regál nebyl nalezen")
+
+        positions = db.query(Position).filter(Position.shelf_id == shelf_id).all()
+        
+        result = []
+        for pos in positions:
+            result.append({
+                "id": pos.id,
+                "radek": pos.radek,
+                "sloupec": pos.sloupec,
+                "nazev_pozice": pos.nazev_pozice,
+                "status": pos.status,
+                "gitterbox": {
+                    "id": pos.gitterbox.id,
+                    "cislo_gb": pos.gitterbox.cislo_gb,
+                    "zodpovedna_osoba": pos.gitterbox.zodpovedna_osoba,
+                    "stav": pos.gitterbox.stav,
+                    "naplnenost_procenta": pos.gitterbox.naplnenost_procenta,
+                    "pocet_polozek": pos.gitterbox.pocet_polozek
+                } if pos.gitterbox else None
+            })
+        
+        return {
+            "status": "success", 
+            "data": result,
+            "message": f"Načteno {len(result)} pozic regálu {shelf.nazev}"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Chyba při načítání pozic regálu: {str(e)}")

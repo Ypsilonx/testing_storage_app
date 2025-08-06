@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Modal Manager</title>
+</head>
+<body>
+    <button id="test-btn">Test Modal</button>
+    <script src="/static/js/modals.js"></script>
+    <script>
+        document.getElementById('test-btn').addEventListener('click', () => {
+            console.log('window.modalManager:', window.modalManager);
+            console.log('typeof window.modalManager:', typeof window.modalManager);
+            if (window.modalManager) {
+                console.log('Methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(window.modalManager)));
+                console.log('show method:', window.modalManager.show);
+                if (window.modalManager.show) {
+                    window.modalManager.show({
+                        title: 'Test Modal',
+                        content: '<p>Test obsah</p>',
+                        buttons: [
+                            { text: 'OK', variant: 'primary', action: () => window.modalManager.hide() }
+                        ]
+                    });
+                }
+            }
+        });
+    </script>
+</body>
+</html>

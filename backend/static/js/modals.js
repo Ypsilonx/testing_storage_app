@@ -105,6 +105,101 @@ class ModalManager {
             }, 300);
         }, 3000);
     }
+
+    /**
+     * Univerzální metoda pro zobrazení custom modalu
+     */
+    show({ title, content, size = 'medium', buttons = [] }) {
+        // Zavři aktivní modal
+        this.hide();
+        
+        // Velikosti modalu
+        const sizeClasses = {
+            small: 'max-w-md',
+            medium: 'max-w-lg', 
+            large: 'max-w-2xl',
+            xlarge: 'max-w-4xl'
+        };
+        
+        // Vytvoř modal HTML
+        const modalId = 'dynamic-modal-' + Date.now();
+        const modalHtml = `
+            <div id="${modalId}" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center modal-overlay">
+                <div class="bg-white rounded-xl shadow-xl ${sizeClasses[size]} w-full mx-4">
+                    <!-- Header -->
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <h2 class="text-xl font-semibold text-gray-900">${title}</h2>
+                            <button type="button" class="text-gray-400 hover:text-gray-600 close-modal-btn">
+                                <i class="fas fa-times text-xl"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Content -->
+                    <div class="px-6 py-4">
+                        ${content}
+                    </div>
+                    
+                    <!-- Footer -->
+                    <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+                        ${buttons.map(btn => {
+                            const variantClasses = {
+                                primary: 'bg-blue-600 hover:bg-blue-700 text-white',
+                                secondary: 'bg-gray-200 hover:bg-gray-300 text-gray-800',
+                                danger: 'bg-red-600 hover:bg-red-700 text-white'
+                            };
+                            return `<button type="button" class="px-4 py-2 rounded-lg font-medium transition-colors ${variantClasses[btn.variant] || variantClasses.primary}" data-action="${buttons.indexOf(btn)}">${btn.text}</button>`;
+                        }).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Přidej modal do DOM
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+        // Nastav aktivní modal
+        this.activeModal = document.getElementById(modalId);
+        document.body.style.overflow = 'hidden';
+        
+        // Připoj event listenery
+        const modal = this.activeModal;
+        
+        // Close button
+        modal.querySelector('.close-modal-btn').addEventListener('click', () => {
+            this.hide();
+        });
+        
+        // Button actions
+        modal.querySelectorAll('[data-action]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const actionIndex = parseInt(e.target.dataset.action);
+                const button = buttons[actionIndex];
+                if (button && button.action) {
+                    button.action();
+                }
+            });
+        });
+        
+        // Click outside to close
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                this.hide();
+            }
+        });
+    }
+
+    /**
+     * Zavření aktivního modalu
+     */
+    hide() {
+        if (this.activeModal) {
+            this.activeModal.remove();
+            this.activeModal = null;
+            document.body.style.overflow = '';
+        }
+    }
 }
 
 /**
@@ -1418,6 +1513,103 @@ class ArchiveModal {
 // Global instances
 window.modalManager = new ModalManager();
 window.archiveModal = new ArchiveModal();
+
+// Manually add show() method to modal manager instance if missing
+if (!window.modalManager.show) {
+    console.warn('⚠️ show() method missing, adding manually');
+    window.modalManager.show = function({ title, content, size = 'medium', buttons = [] }) {
+        // Zavři aktivní modal
+        this.hide();
+        
+        // Velikosti modalu
+        const sizeClasses = {
+            small: 'max-w-md',
+            medium: 'max-w-lg', 
+            large: 'max-w-2xl',
+            xlarge: 'max-w-4xl'
+        };
+        
+        // Vytvoř modal HTML
+        const modalId = 'dynamic-modal-' + Date.now();
+        const modalHtml = `
+            <div id="${modalId}" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center modal-overlay">
+                <div class="bg-white rounded-xl shadow-xl ${sizeClasses[size]} w-full mx-4">
+                    <!-- Header -->
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <h2 class="text-xl font-semibold text-gray-900">${title}</h2>
+                            <button type="button" class="text-gray-400 hover:text-gray-600 close-modal-btn">
+                                <i class="fas fa-times text-xl"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Content -->
+                    <div class="px-6 py-4">
+                        ${content}
+                    </div>
+                    
+                    <!-- Footer -->
+                    <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+                        ${buttons.map(btn => {
+                            const variantClasses = {
+                                primary: 'bg-blue-600 hover:bg-blue-700 text-white',
+                                secondary: 'bg-gray-200 hover:bg-gray-300 text-gray-800',
+                                danger: 'bg-red-600 hover:bg-red-700 text-white'
+                            };
+                            return `<button type="button" class="px-4 py-2 rounded-lg font-medium transition-colors ${variantClasses[btn.variant] || variantClasses.primary}" data-action="${buttons.indexOf(btn)}">${btn.text}</button>`;
+                        }).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Přidej modal do DOM
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+        // Nastav aktivní modal
+        this.activeModal = document.getElementById(modalId);
+        document.body.style.overflow = 'hidden';
+        
+        // Připoj event listenery
+        const modal = this.activeModal;
+        
+        // Close button
+        modal.querySelector('.close-modal-btn').addEventListener('click', () => {
+            this.hide();
+        });
+        
+        // Button actions
+        modal.querySelectorAll('[data-action]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const actionIndex = parseInt(e.target.dataset.action);
+                const button = buttons[actionIndex];
+                if (button && button.action) {
+                    button.action();
+                }
+            });
+        });
+        
+        // Click outside to close
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                this.hide();
+            }
+        });
+    };
+}
+
+// Add hide() method if missing
+if (!window.modalManager.hide) {
+    console.warn('⚠️ hide() method missing, adding manually');
+    window.modalManager.hide = function() {
+        if (this.activeModal) {
+            this.activeModal.remove();
+            this.activeModal = null;
+            document.body.style.overflow = '';
+        }
+    };
+}
 
 // Export tříd pro použití v app.js
 window.GitterboxModal = GitterboxModal;

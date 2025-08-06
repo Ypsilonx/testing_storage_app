@@ -138,6 +138,43 @@ const API = {
         return ApiClient.get(`/positions/${positionId}`);
     },
 
+    // === REGÁLY API ===
+    
+    /**
+     * Získání všech regálů
+     */
+    async getAllShelves() {
+        return ApiClient.get('/shelves/');
+    },
+
+    /**
+     * Získání konkrétního regálu
+     */
+    async getShelf(shelfId) {
+        return ApiClient.get(`/shelves/${shelfId}`);
+    },
+
+    /**
+     * Vytvoření nového regálu
+     */
+    async createShelf(shelfData) {
+        return ApiClient.post('/shelves/', shelfData);
+    },
+
+    /**
+     * Úprava regálu
+     */
+    async updateShelf(shelfId, updates) {
+        return ApiClient.put(`/shelves/${shelfId}`, updates);
+    },
+
+    /**
+     * Smazání regálu
+     */
+    async deleteShelf(shelfId) {
+        return ApiClient.delete(`/shelves/${shelfId}`);
+    },
+
     // === GITTERBOXY ===
     
     /**

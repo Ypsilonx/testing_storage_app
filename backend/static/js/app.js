@@ -10,7 +10,8 @@ class SkladovaApp {
         this.isInitialized = false;
         this.refreshCallbacks = {
             regaly: [],
-            vyhledavani: []
+            vyhledavani: [],
+            admin: []
         };
         
         this.initializeApp();
@@ -118,9 +119,13 @@ class SkladovaApp {
         this.tabButtons = document.querySelectorAll('.tab-button-header');
         this.tabContents = {
             regaly: document.getElementById('content-regaly'),
-            vyhledavani: document.getElementById('content-vyhledavani')
+            vyhledavani: document.getElementById('content-vyhledavani'),
+            admin: document.getElementById('content-admin')
         };
         this.refreshBtn = document.getElementById('refresh-btn');
+        
+        // Admin button
+        this.adminBtn = document.getElementById('btn-manage-shelves');
     }
 
     /**
@@ -149,6 +154,13 @@ class SkladovaApp {
                 if (this.gitterboxModal) {
                     this.gitterboxModal.openCreate();
                 }
+            });
+        }
+
+        // Admin button
+        if (this.adminBtn) {
+            this.adminBtn.addEventListener('click', () => {
+                this.switchTab('admin');
             });
         }
 
@@ -234,6 +246,13 @@ class SkladovaApp {
                     }
                 }, 100);
                 break;
+                
+            case 'admin':
+                // Načti admin tab data
+                if (window.adminTab) {
+                    window.adminTab.loadShelves();
+                }
+                break;
         }
     }
 
@@ -257,6 +276,12 @@ class SkladovaApp {
                 case 'vyhledavani':
                     if (window.vyhledavaniTab) {
                         await window.vyhledavaniTab.refresh();
+                    }
+                    break;
+                    
+                case 'admin':
+                    if (window.adminTab) {
+                        await window.adminTab.loadShelves();
                     }
                     break;
             }
@@ -289,6 +314,10 @@ class SkladovaApp {
                 case '2':
                     e.preventDefault();
                     this.switchTab('vyhledavani');
+                    break;
+                case '3':
+                    e.preventDefault();
+                    this.switchTab('admin');
                     break;
                 case 'r':
                     e.preventDefault();
