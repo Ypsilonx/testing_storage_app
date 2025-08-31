@@ -40,7 +40,7 @@ pip install -r requirements.txt
 # Spuštění aplikace
 uvicorn backend.main:app --reload
 
-# Aplikace běží na http://localhost:8000
+# Aplikace běží na http://localhost:8050
 ```
 
 ## 📁 Struktura projektu
