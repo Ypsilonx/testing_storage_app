@@ -1,9 +1,8 @@
+# === Python ===
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
-
-# C extensions
 *.so
 
 # Distribution / packaging
@@ -49,8 +48,10 @@ coverage.xml
 .pytest_cache/
 cover/
 
-# Environments
+# === Environments ===
 .env
+.env.local
+.env.production
 .venv
 env/
 venv/
@@ -58,19 +59,29 @@ ENV/
 env.bak/
 venv.bak/
 
-# Database
+# === Database ===
 *.db
 *.sqlite
 *.sqlite3
+storage.db
+backups/
 
-# IDE
+# === Application Specific ===
+# Excel exporty a archivy
+backend/docs/*.xlsx
+backend/docs/*.xls
+*.xlsx
+*.xls
+
+# === IDE ===
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
+.vscode-server/
 
-# OS
+# === OS ===
 .DS_Store
 .DS_Store?
 ._*
@@ -79,12 +90,11 @@ venv.bak/
 ehthumbs.db
 Thumbs.db
 
-# Logs
+# === Logs ===
 *.log
 logs/
 
-# Temporary files
+# === Temporary files ===
 tmp/
 temp/
-
-*.xlsx
+*.tmp

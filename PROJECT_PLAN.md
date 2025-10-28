@@ -322,27 +322,32 @@
 ## 🔧 TECHNICKÉ ŘEŠENÍ PROSTŘEDÍ
 
 ### Python Virtual Environment:
-- **Lokace**: `d:\61_Programing\Optimalizace_prace\testing_storage_app\.venv\`
-- **Aktivace**: `.\.venv\Scripts\Activate.ps1` (PowerShell)
-- **Python Path**: `D:/61_Programing/Optimalizace_prace/testing_storage_app/.venv/Scripts/python.exe`
-- **Nainstalované balíčky**: fastapi, uvicorn, sqlalchemy, python-dotenv, flask, pyqt6
+- **Lokace**: `.venv/` v root adresáři projektu
+- **Aktivace**: `.\.venv\Scripts\Activate.ps1` (PowerShell) nebo `source .venv/bin/activate` (Linux/Mac)
+- **Python verze**: 3.9+
+- **Nainstalované balíčky**: fastapi, uvicorn, sqlalchemy, python-dotenv, reportlab, openpyxl
 
 ### Spuštění aplikace:
-```powershell
+```bash
 # 1. Přejít do root adresáře projektu
-cd "d:\61_Programing\Optimalizace_prace\testing_storage_app"
+cd storage-app
 
 # 2. Aktivovat virtuální prostředí
+# Windows PowerShell
 .\.venv\Scripts\Activate.ps1
+# Linux/Mac
+source .venv/bin/activate
 
 # 3. Přejít do backend adresáře a spustit server
 cd backend
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+python start_server.py
+# nebo
+uvicorn main:app --host 0.0.0.0 --port 8050 --reload
 ```
 
 ### Dev server: 
-- **URL**: http://localhost:8000
-- **API Docs**: http://localhost:8000/api/docs
+- **URL**: http://localhost:8050
+- **API Docs**: http://localhost:8050/api/docs
 - **Reload**: Automatický při změnách
 
 ### FÁZE 4: VIZUALIZACE REGÁLŮ (týden 4) ✅ KOMPLETNÍ

@@ -46,7 +46,7 @@ cd /opt/storage-app
 git clone [your-repo-url] .
 
 # Option B: SCP z lokálního počítače
-scp -r d:\61_Programing\Optimalizace_prace\testing_storage_app/* user@server:/opt/storage-app/
+scp -r /local/path/to/storage-app/* user@server:/opt/storage-app/
 
 # Option C: Zip archiv
 # - Zabaolit projekt do zip
