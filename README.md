@@ -1,251 +1,153 @@
-# 📦 Skladová Aplikace pro Správu Gitterboxů# Skladová aplikace pro správu Gitterboxů
+# 📦 Skladová Aplikace pro Správu Gitterboxů
 
+<div align="center">
 
+**Moderní webová aplikace pro správu skladu s vizualizací regálů a sledováním expirací položek**
 
-<div align="center">Webová aplikace pro správu skladu s vizualizací regálů a sledováním expirací položek.
-
-
-
-![Version](https://img.shields.io/badge/version-1.4-blue.svg)## 🎯 Klíčové funkce
+![Version](https://img.shields.io/badge/version-1.4-blue.svg)
 
 ![Python](https://img.shields.io/badge/python-3.9+-green.svg)
 
-![FastAPI](https://img.shields.io/badge/FastAPI-0.104.1-009688.svg)- **Globální číslování GB** - čísla 1 až max pozic celého skladu
+![FastAPI](https://img.shields.io/badge/FastAPI-0.104.1-009688.svg)
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)- **Dvoustupňové workflow** - založení GB → přidávání položek
-
-- **Vizualizace regálů** - barevné kódování podle stavu
-
-**Moderní webová aplikace pro správu skladu s vizualizací regálů a sledováním expirací položek**- **Flexibilní sledování** - volitelné TMA čísla a expirace
-
-- **Fulltext vyhledávání** - se stromovou strukturou skladu
-
-[🚀 Začít](#-quick-start) •- **Export funkcionalita** - PDF/Excel výstupy
-
-[📖 Dokumentace](#-dokumentace) •
-
-[✨ Funkce](#-klíčové-funkce) •## 🏗️ Technologie
-
-[🛠️ Instalace](#️-instalace) •
-
-[🤝 Přispět](#-přispívání)- **Backend**: Python FastAPI + SQLAlchemy + SQLite
-
-- **Frontend**: HTML/CSS/JavaScript + Tailwind CSS
-
-</div>- **Database**: SQLite (development), PostgreSQL ready
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
 
 
+[📖 Dokumentace](#-dokumentace)
 
----## 📊 Struktura skladu
+[🚀 Začít](#-quick-start)
 
+[✨ Funkce](#-klíčové-funkce)
 
+[🛠️ Instalace](#️-instalace)
 
-## 📋 O Projektu### Lokace:
+[🤝 Přispět](#-přispívání)
 
-- **Mošnov**: Regál A (3×9), Regál B (4×4) = 43 pozic
-
-Skladová aplikace je komplexní systém pro efektivní správu skladu s důrazem na intuitivní vizualizaci, flexibilní sledování expirací a pokročilé vyhledávání. Ideální pro firmy využívající Gitterboxy (kovové paletové kontejnery) pro skladování.- **Kopřivnice**: Hala regál 1 (4×6), Hala regál 2 (4×6), Zkušebna (3×8) = 72 pozic
-
-- **Celkem**: 115 pozic pro Gitterboxy
-
-### 🎯 Hlavní výhody
-
-### Barevné kódování:
-
-- **Vizuální přehled** - Interaktivní mřížka regálů s barevným kódováním stavů- 🟢 **Zelená**: Volná pozice
-
-- **Globální číslování** - Jednotný systém číslování pro celý sklad- 🔵 **Modrá**: GB s nesledovanými položkami
-
-- **Flexibilní tracking** - Volitelné sledování TMA čísel, projektů a expirací- 🟠 **Oranžová**: GB se sledovanými položkami (OK)
-
-- **Pokročilé vyhledávání** - Fulltext search se stromovou strukturou- 🟠🟡 **Oranžová+šrafování**: Neúplně naplněný GB (<80%)
-
-- **Export & Reporting** - PDF a Excel výstupy pro reporting- 🔴 **Červená**: GB s kritickými expiraci
-
-- **Archivace** - Kompletní historie vyskladnění s důvody
-
-## 🚀 Instalace a spuštění
+</div>
 
 ---
 
-```bash
+## 📋 O Projektu
 
-## ✨ Klíčové Funkce# Instalace závislostí
+Skladová aplikace je komplexní systém pro efektivní správu skladu s důrazem na intuitivní vizualizaci, flexibilní sledování expirací a pokročilé vyhledávání. Ideální pro firmy využívající Gitterboxy (kovové paletové kontejnery) pro skladování.
 
-pip install -r requirements.txt
+### 🎯 Hlavní výhody
+
+- **Vizuální přehled** - Interaktivní mřížka regálů s barevným kódováním stavů
+
+- **Globální číslování** - Jednotný systém číslování pro celý sklad
+
+- **Flexibilní tracking** - Volitelné sledování TMA čísel, projektů a expirací
+
+- **Pokročilé vyhledávání** - Fulltext search se stromovou strukturou
+
+- **Export & Reporting** - PDF a Excel výstupy pro reporting
+
+- **Archivace** - Kompletní historie vyskladnění s důvody
+
+---
+
+## ✨ Klíčové Funkce
 
 ### 📊 Vizualizace Skladu
 
-- **Interaktivní regálové mřížky** - klikatelné pozice s detailními informacemi# Spuštění aplikace
-
-- **Barevné kódování**:uvicorn backend.main:app --reload
-
+- **Interaktivní regálové mřížky** - klikatelné pozice s detailními informacemi
+- **Barevné kódování**:
   - 🟢 Volná pozice
-
-  - 🔵 Obsazená pozice (100% naplněné)# Aplikace běží na http://localhost:8050
-
-  - 🟠 Částečně naplněná (<100%)```
-
+  - 🔵 Obsazená pozice (100% naplněné)
+  - 🟠 Částečně naplněná (<100%)
   - 🔴 Kritické expirace (blikající alert)
-
-- **Skladové číslování** - warehouse standard (řádek-sloupec, zdola nahoru)## 📁 Struktura projektu
-
+- **Skladové číslování** - warehouse standard (řádek-sloupec, zdola nahoru)
 - **Responsive design** - automatické škálování šířky regálů
 
-```
+### 🔍 Vyhledávání & Filtry
 
-### 🔍 Vyhledávání & Filtrytesting_storage_app/
+- **Fulltext search** - prohledávání všech atributů (název, TMA, projekt, osoba)
+- **Stromová struktura** - hierarchické zobrazení lokace → regál → GB → položky
+- **Pokročilé filtry**:
+  - Zodpovědná osoba (dropdown)
+  - Projekt (dropdown)
+  - Lokace (multi-select)
+  - Stav položek (aktivní/archivované)
+- **Cross-tab navigace** - přechod mezi záložkami s kontextem
 
-- **Fulltext search** - prohledávání všech atributů (název, TMA, projekt, osoba)├── backend/                 # FastAPI backend
+### 📦 Správa Gitterboxů
 
-- **Stromová struktura** - hierarchické zobrazení lokace → regál → GB → položky│   ├── main.py             # Hlavní aplikace
-
-- **Pokročilé filtry**:│   ├── models.py           # SQLAlchemy modely
-
-  - Zodpovědná osoba (dropdown)│   ├── database.py         # DB konfigurace
-
-  - Projekt (dropdown)│   ├── routers/            # API endpointy
-
-  - Lokace (multi-select)│   ├── services/           # Business logika
-
-  - Stav položek (aktivní/archivované)│   └── static/             # Frontend soubory
-
-- **Cross-tab navigace** - přechod mezi záložkami s kontextem├── tests/                  # Testy
-
-├── docs/                   # Dokumentace
-
-### 📦 Správa Gitterboxů├── PROJECT_PLAN.md         # Detailní plán vývoje
-
-- **Dvoustupňové workflow**:├── requirements.txt        # Python závislosti
-
-  1. Založení GB s výběrem pozice└── README.md              # Tento soubor
-
-  2. Postupné přidávání položek```
-
+- **Dvoustupňové workflow**:
+  1. Založení GB s výběrem pozice
+  2. Postupné přidávání položek
 - **Globální číslování** - čísla 1 až max pozic celého skladu
-
-- **Uživatelský výběr čísel** - s real-time validací dostupnosti## 📋 Aktuální stav vývoje
-
+- **Uživatelský výběr čísel** - s real-time validací dostupnosti
 - **Naplněnost tracking** - vizuální indikace 0-100%
+- **Breadcrumb navigace** - orientace v kontextu GB
 
-- **Breadcrumb navigace** - orientace v kontextu GBViz [PROJECT_PLAN.md](PROJECT_PLAN.md) pro detailní roadmapu a progress tracking.
+### 📝 Položky & Expirace
 
-
-
-### 📝 Položky & Expirace### Hotovo:
-
-- **Flexibilní položky**:- [x] ✅ Plán a architektura
-
-  - TMA číslo (volitelné)- [x] ✅ Struktura projektu
-
-  - Projekt (volitelný)- [x] ✅ Roadmapa
-
-  - Počet kusů + jednotka- [x] ✅ **FÁZE 1 KOMPLETNÍ**: Základní backend s databází a API
-
+- **Flexibilní položky**:
+  - TMA číslo (volitelné)
+  - Projekt (volitelný)
+  - Počet kusů + jednotka
   - Sledování expirace (lze vypnout)
-
-- **Automatická expirace** - výchozí 1 rok od zaskladnění### Aktuálně pracujeme na:
-
-- **Expiry tracking** - přehled položek blížících se expiraci (7/14/30 dní)- [ ] 🔄 Fáze 2: Gitterbox management a číslování
-
+- **Automatická expirace** - výchozí 1 rok od zaskladnění
+- **Expiry tracking** - přehled položek blížících se expiraci (7/14/30 dní)
 - **Kritické alerty** - automatické zobrazení v sidebaru
 
-## 🎮 Hlavní UI
+###  Export & Archivace
 
-### 📤 Export & Archivace
-
-- **PDF export** - kompaktní layout s kompletními daty### Záložka REGÁLY
-
-- **Excel export** - strukturovaný spreadsheet s auto-šířkou sloupců- Přehled Gitterboxů s rychlými informacemi
-
-- **Inteligentní názvy** - dle filtrů (např. `Sklad_Cibulka_20251028.pdf`)- Interaktivní vizualizace regálů
-
-- **Archivace vyskladnění**:- Detail GB po kliknutí
-
-  - Důvody: expirace, rozbito, chyba, jiné- Kritické expirace
-
+- **PDF export** - kompaktní layout s kompletními daty
+- **Excel export** - strukturovaný spreadsheet s auto-šířkou sloupců
+- **Inteligentní názvy** - dle filtrů (např. `Sklad_Cibulka_20251028.pdf`)
+- **Archivace vyskladnění**:
+  - Důvody: expirace, rozbito, chyba, jiné
   - Excel export archivních dat
+  - Automatické uvolnění pozic
 
-  - Automatické uvolnění pozic### Záložka VYHLEDÁVÁNÍ  
+### ⚙️ Administrace
 
-- Fulltext vyhledávání
-
-### ⚙️ Administrace- Stromová struktura skladu
-
-- **Správa regálů** - změna názvů a rozměrů- Export do PDF/Excel
-
-- **Ochrana dat** - blokování změn velikosti obsazených regálů- Detailní seznamy položek
-
+- **Správa regálů** - změna názvů a rozměrů
+- **Ochrana dat** - blokování změn velikosti obsazených regálů
 - **Automatická regenerace** - pozic při změnách rozměrů
+- **Dashboard statistiky** - přehled obsazenosti (formát 13/115 GB)
 
-- **Dashboard statistiky** - přehled obsazenosti (formát 13/115 GB)## 🔧 Konfigurace
+---
 
+## 🏗️ Technologie
 
+### Backend
 
----Aplikace používá `.env` soubor pro konfiguraci:
-
-
-
-## 🏗️ Technologie```env
-
-DATABASE_URL=sqlite:///./storage.db
-
-### BackendSECRET_KEY=your-secret-key
-
-- **FastAPI** - moderní, rychlý web frameworkDEBUG=True
-
-- **SQLAlchemy** - ORM pro databázové operace```
-
+- **FastAPI** - moderní, rychlý web framework
+- **SQLAlchemy** - ORM pro databázové operace
 - **SQLite** - development databáze (PostgreSQL ready)
+- **Uvicorn** - ASGI server s hot-reload
 
-- **Uvicorn** - ASGI server s hot-reload## 📖 Dokumentace
+### Frontend
 
-
-
-### Frontend- [PROJECT_PLAN.md](PROJECT_PLAN.md) - Kompletní plán vývoje
-
-- **Vanilla JavaScript** - bez framework overhead- [API dokumentace](http://localhost:8000/docs) - FastAPI Swagger UI
-
-- **Tailwind CSS** - utility-first styling- [Redoc dokumentace](http://localhost:8000/redoc) - Alternativní API docs
-
+- **Vanilla JavaScript** - bez framework overhead
+- **Tailwind CSS** - utility-first styling
 - **Responsive design** - mobile-friendly UI
+- **Dark mode** - tmavý režim s Consolas fontem
 
-- **Dark mode** - tmavý režim s Consolas fontem## 🤝 Přispívání
+### Export & Reporting
 
+- **ReportLab** - generování PDF dokumentů
+- **OpenPyXL** - Excel soubory s pokročilým formátováním
+- **Unicode support** - plná podpora češtiny (Arial, DejaVu fonts)
 
+---
 
-### Export & Reporting1. Následuj plán v `PROJECT_PLAN.md`
+## 🚀 Quick Start
 
-- **ReportLab** - generování PDF dokumentů2. Každý commit by měl posunout nějaký checkbox v plánu
-
-- **OpenPyXL** - Excel soubory s pokročilým formátováním3. Testuj funkcionalitu před commitem
-
-- **Unicode support** - plná podpora češtiny (Arial, DejaVu fonts)4. Používej české komentáře pro business logiku
-
-
-
----## 📝 Licence
-
-
-
-## 🚀 Quick StartInterní projekt - všechna práva vyhrazena.
-
-
-
-### Požadavky---
+### Požadavky
 
 - Python 3.9+
-
-- pip (Python package manager)*Vytvořeno: 27.7.2025*  
-
-- Git (volitelné)*Verze: 1.0*
-
+- pip (Python package manager)
+- Git (volitelné)
 
 ### Instalace za 3 kroky
 
 ```bash
 # 1. Klonovat nebo stáhnout repozitář
-git clone https://github.com/your-username/storage-app.git
+git clone https://github.com/Ypsilonx/storage-app.git
 cd storage-app
 
 # 2. Vytvořit virtuální prostředí a nainstalovat závislosti
@@ -269,7 +171,7 @@ Aplikace běží na **http://localhost:8050** 🎉
 
 ```bash
 # Klonování repozitáře
-git clone https://github.com/your-username/storage-app.git
+git clone https://github.com/Ypsilonx/storage-app.git
 cd storage-app
 
 # Vytvoření virtuálního prostředí
@@ -307,6 +209,7 @@ nano .env  # nebo jakýkoli editor
 ```
 
 **Důležité nastavení v `.env`:**
+
 ```env
 DATABASE_URL=sqlite:///./storage.db
 SECRET_KEY=change-this-in-production
@@ -327,6 +230,7 @@ python init_test_data.py
 ```
 
 **Testovací data obsahují:**
+
 - 5 lokací (Mošnov, Kopřivnice, ...)
 - 8 regálů (různé velikosti)
 - 13 Gitterboxů (různé stavy naplněnosti)
@@ -344,6 +248,7 @@ python start_production.py
 ```
 
 **Aplikace běží na:**
+
 - Frontend: http://localhost:8050
 - API dokumentace: http://localhost:8050/api/docs
 - Alternative docs: http://localhost:8050/api/redoc
@@ -355,6 +260,7 @@ python start_production.py
 ### Uživatelská dokumentace
 
 #### Záložka REGÁLY
+
 1. **Výběr regálu** - dropdown menu nahoře
 2. **Interaktivní mřížka** - klikněte na pozici pro detail
 3. **Barevné indikace**:
@@ -366,6 +272,7 @@ python start_production.py
 5. **Detail GB** - kliknutím na pozici (zobrazí položky)
 
 #### Záložka VYHLEDÁVÁNÍ
+
 1. **Fulltext pole** - vyhledávání ve všech atributech
 2. **Filtry** - osoba, projekt, lokace, stav
 3. **Stromová struktura** - rozbalovací hierarchie
@@ -373,21 +280,25 @@ python start_production.py
 5. **Navigace** - breadcrumbs a cross-tab odkazy
 
 #### Správa Regálů
+
 1. **Přístup** - levý panel → "Správa systému" → "Upravit regály"
 2. **Operace**:
    - Změna názvu regálu (klikněte na název)
+
    - Změna rozměrů (⚠️ pouze u prázdných regálů)
    - Smazání regálu (⚠️ pouze pokud je prázdný)
 
 ### API Dokumentace
 
 Kompletní interaktivní API dokumentace dostupná na:
+
 - **Swagger UI**: http://localhost:8050/api/docs
 - **ReDoc**: http://localhost:8050/api/redoc
 
 #### Hlavní endpointy:
 
 **Gitterboxy:**
+
 - `GET /api/gitterboxes/` - seznam všech GB
 - `POST /api/gitterboxes/` - vytvoření nového GB
 - `GET /api/gitterboxes/{id}` - detail GB
@@ -395,6 +306,7 @@ Kompletní interaktivní API dokumentace dostupná na:
 - `DELETE /api/gitterboxes/{id}` - soft delete GB
 
 **Položky:**
+
 - `GET /api/items/` - seznam položek
 - `POST /api/items/` - přidání položky do GB
 - `PUT /api/items/{id}` - aktualizace položky
@@ -402,15 +314,18 @@ Kompletní interaktivní API dokumentace dostupná na:
 - `GET /api/items/expiring-soon` - blízké expirace
 
 **Pozice:**
+
 - `GET /api/positions/` - všechny pozice
 - `GET /api/positions/available` - volné pozice
 - `GET /api/positions/tree` - stromová struktura
 
 **Export:**
+
 - `GET /api/export/pdf` - PDF export aktuálních dat
 - `GET /api/export/excel` - Excel export
 
 **Archiv:**
+
 - `POST /api/archive/item/{id}` - archivace položky
 - `POST /api/archive/gitterbox/{id}` - archivace GB
 - `GET /api/archive/export` - stažení archivu
@@ -427,16 +342,13 @@ storage-app/
 │   ├── database.py            # DB konfigurace a session management
 │   ├── storage_config.py      # Skladová konfigurace (regály, lokace)
 │   ├── start_server.py        # Development server
-│   ├── start_production.py    # Production server
 │   ├── reset_db.py            # Reset databáze
 │   ├── init_test_data.py      # Inicializace testovacích dat
 │   ├── routers/               # API routery
 │   │   ├── gitterboxes.py    # CRUD operace pro GB
 │   │   ├── items.py          # Správa položek
 │   │   ├── positions.py      # Pozice a regály
-│   │   ├── shelves.py        # Správa regálů
-│   │   ├── archive.py        # Archivace a vyskladnění
-│   │   └── export.py         # PDF/Excel exporty
+│   │   └── archive.py        # Archivace a vyskladnění
 │   ├── services/              # Business logika
 │   │   └── archive_service.py
 │   └── static/                # Frontend soubory
@@ -454,16 +366,13 @@ storage-app/
 │   └── workflows/
 │       └── ci.yml            # CI/CD pipeline
 ├── docs/                      # Dodatečná dokumentace
-├── tests/                     # Unit testy (TODO)
 ├── .env.example              # Šablona konfigurace
 ├── .gitignore                # Git ignore pravidla
 ├── requirements.txt          # Python závislosti
-├── requirements.prod.txt     # Produkční závislosti
 ├── LICENSE                   # MIT License
 ├── README.md                 # Tento soubor
 ├── CONTRIBUTING.md           # Návod pro přispěvatele
 ├── DEPLOYMENT.md             # Produkční deployment
-├── DEMO_SETUP.md             # Quick demo setup
 └── PROJECT_PLAN.md           # Detailní plán vývoje
 ```
 
@@ -480,16 +389,20 @@ locations (lokace)
   │           └── gitterboxes (GB)
   │                 └── items (položky)
   └── (relace 1:N)
-```
 
 **Klíčové tabulky:**
+
 - `locations` - skladové lokace (Mošnov, Kopřivnice)
+
 - `shelves` - regály s rozměry (řádky × sloupce)
+
 - `positions` - pozice v regálech (status: volná/obsazená)
+
 - `gitterboxes` - hlavní kontejnery (GB číslo, osoba, naplněnost)
+
 - `items` - položky uvnitř GB (TMA, projekt, expirace)
 
-### Environment variables
+### Environment Variables
 
 | Proměnná | Výchozí | Popis |
 |----------|---------|-------|
@@ -549,7 +462,7 @@ Rádi přivítáme příspěvky! Prosím přečtěte si [CONTRIBUTING.md](CONTRI
 4. **Push** do branch (`git push origin feature/amazing-feature`)
 5. **Otevřete** Pull Request
 
-### Coding konvence
+### Coding Konvence
 
 - **Python**: PEP 8 style guide
 - **JavaScript**: ES6+ standardy
@@ -567,7 +480,6 @@ Rádi přivítáme příspěvky! Prosím přečtěte si [CONTRIBUTING.md](CONTRI
 - [ ] 📅 **Phase 10**: Analytics & Reporting (grafy, predikce)
 - [ ] 📅 **Phase 11**: Integrace (API, QR kódy, webhooks)
 - [ ] 📅 **Phase 12**: Mobile & PWA (offline, push notifikace)
-- [ ] 📅 **Phase 13**: Production ready (Docker, PostgreSQL, monitoring)
 
 Detailní plán: [PROJECT_PLAN.md](PROJECT_PLAN.md)
 
@@ -577,10 +489,10 @@ Detailní plán: [PROJECT_PLAN.md](PROJECT_PLAN.md)
 
 - [ ] Unit testy - plánované v Phase 9
 - [ ] Authentication - budoucí implementace
-- [ ] PostgreSQL migrace - Phase 13
+- [ ] PostgreSQL migrace - plánovaná
 - [ ] Mobile optimalizace - Phase 12
 
-Reportujte bugy na [GitHub Issues](https://github.com/your-username/storage-app/issues)
+Reportujte bugy na [GitHub Issues](https://github.com/Ypsilonx/storage-app/issues)
 
 ---
 
@@ -592,9 +504,9 @@ Tento projekt je licencován pod MIT License - viz [LICENSE](LICENSE) pro detail
 
 ## 👥 Autoři
 
-- **Původní autor** - *Initial work* - [YourName](https://github.com/your-username)
+- **Původní autor** - *Initial work* - [YourName](https://github.com/Ypsilonx)
 
-Viz také seznam [přispěvatelů](https://github.com/your-username/storage-app/contributors).
+Viz také seznam [přispěvatelů](https://github.com/Ypsilonx/storage-app/contributors).
 
 ---
 
@@ -610,8 +522,8 @@ Viz také seznam [přispěvatelů](https://github.com/your-username/storage-app/
 ## 📞 Kontakt & Podpora
 
 - 📧 Email: your.email@example.com
-- 🐛 Issues: [GitHub Issues](https://github.com/your-username/storage-app/issues)
-- 💬 Discussions: [GitHub Discussions](https://github.com/your-username/storage-app/discussions)
+- 🐛 Issues: [GitHub Issues](https://github.com/Ypsilonx/storage-app/issues)
+- 💬 Discussions: [GitHub Discussions](https://github.com/Ypsilonx/storage-app/discussions)
 
 ---
 
