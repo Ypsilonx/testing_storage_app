@@ -1,0 +1,57 @@
+# Git
+.git/
+.gitignore
+.github/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Database & Data
+*.db
+*.sqlite
+*.sqlite3
+storage.db
+backups/
+
+# Logs
+*.log
+logs/
+
+# Documentation (not needed in container)
+PROJECT_PLAN.md
+DEMO_SETUP.md
+CONTRIBUTING.md
+
+# Archives & Exports
+*.xlsx
+*.xls
+backend/docs/*.xlsx
+
+# Environment files
+.env
+.env.local
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# OS
+.DS_Store
+Thumbs.db
